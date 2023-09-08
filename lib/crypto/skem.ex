@@ -5,20 +5,22 @@ defmodule Bunny.Crypto.SKEM do
   Its ciphertexts and private keys are small (188 bytes and 13568 bytes), and its public keys are large (524160 bytes).
   This fits our use case: public keys are exchanged out-of-band, and only the small ciphertexts have to be transmitted during the handshake.
   """
+  @type public_key :: :pqclean_nif.mceliece460896_public_key()
+  @type secret_key :: :pqclean_nif.mceliece460896_secret_key()
+  @type cipher_text :: :pqclean_nif.mceliece460896_cipher_text()
+  @type shared_secret :: :pqclean_nif.mceliece460896_shared_secret()
 
-  @spec enc(:pqclean_nif.mceliece460896_public_key()) ::
-          {:pqclean_nif.mceliece460896_cipher_text(), :pqclean_nif.mceliece460896_shared_secret()}
+  @spec enc(public_key()) :: {cipher_text(), shared_secret()}
   def enc(public_key) do
     :pqclean_nif.mceliece460896_encapsulate(public_key)
   end
 
-  @spec dec(:pqclean_nif.mceliece460896_secret_key(), :pqclean_nif.mceliece460896_cipher_text()) ::
-          :pqclean_nif.mceliece460896_shared_secret()
+  @spec dec(secret_key(), cipher_text()) :: shared_secret()
   def dec(secret_key, ciphertext) do
     :pqclean_nif.mceliece460896_decapsulate(ciphertext, secret_key)
   end
 
-  @spec gen_key() :: :pqclean_nif.mceliece460896_keypair()
+  @spec gen_key() :: {public_key(), secret_key()}
   def gen_key() do
     :pqclean_nif.mceliece460896_keypair()
   end
