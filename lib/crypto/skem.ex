@@ -17,4 +17,9 @@ defmodule Bunny.Crypto.SKEM do
   def dec(secret_key, ciphertext) do
     :pqclean_nif.mceliece460896_decapsulate(ciphertext, secret_key)
   end
+
+  @spec gen_key() :: :pqclean_nif.mceliece460896_keypair()
+  def gen_key() do
+    :pqclean_nif.mceliece460896_keypair()
+  end
 end

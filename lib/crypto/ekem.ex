@@ -10,4 +10,9 @@ defmodule Bunny.Crypto.EKEM do
   def dec(secret_key, ciphertext) do
     :pqclean_nif.kyber512_decapsulate(ciphertext, secret_key)
   end
+
+  @spec gen_key() :: :pqclean_nif.kyber512_keypair()
+  def gen_key() do
+    :pqclean_nif.kyber512_keypair()
+  end
 end
