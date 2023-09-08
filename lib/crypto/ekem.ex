@@ -1,4 +1,11 @@
 defmodule Bunny.Crypto.EKEM do
+  @moduledoc """
+  We use Kyber-512 [7], which has been selected in the NIST post-quantum
+  cryptography competition and claims to be as hard to break as 128-bit AES.
+  Its ciphertexts, public keys, and private keys are 768, 800, and 1632 bytes
+  long, respectively, providing a good balance for our use case as both a public
+  key and a ciphertext have to be transmitted during the handshake.
+  """
   @type public_key :: :pqclean_nif.kyber512_public_key()
   @type secret_key :: :pqclean_nif.kyber512_secret_key()
   @type cipher_text :: :pqclean_nif.kyber512_cipher_text()
