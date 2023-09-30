@@ -1,7 +1,16 @@
 defmodule Bunny.Crypto do
+  @type chaining_key :: key()
   @type hash :: binary()
   @type key :: binary()
   @type session_id :: binary()
+
+  @doc """
+  Derives a key from the chaining key.
+  """
+  @spec extract_key(chaining_key(), binary()) :: key()
+  def extract_key(ck, data) do
+    hash(ck, lhash("chaining key extract" <> data))
+  end
 
   @doc """
   A keyed hash function with one 32-byte input, one variable-size input, and one 32-byte output.
