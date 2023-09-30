@@ -19,7 +19,15 @@ defmodule Bunny.Crypto do
   @spec hash(key(), binary()) :: hash()
   def hash(key, data) do
     true = byte_size(key) == 32
-    :crypto.mac(:hmac, :blake2s, key, data)
+
+    ipad = :binary.list_to_bin(List.duplicate(0x36, 32))
+    opad = :binary.list_to_bin(List.duplicate(0x5C, 32))
+
+    ikey = :crypto.exor(key, ipad)
+    okey = :crypto.exor(key, opad)
+
+    outer_data = Blake2.hash2b(data, 32, ikey)
+    Blake2.hash2b(outer_data, 32, okey)
   end
 
   @doc """
