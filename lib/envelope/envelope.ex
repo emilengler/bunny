@@ -1,4 +1,6 @@
 defmodule Bunny.Envelope do
+  alias Bunny.Crypto.SKEM
+  alias Bunny.Crypto
   alias Bunny.Envelope.Data
   alias Bunny.Envelope.EmptyData
   alias Bunny.Envelope.InitConf
@@ -97,5 +99,22 @@ defmodule Bunny.Envelope do
 
     encoded = type <> <<0, 0, 0>> <> payload_enc <> payload.mac <> payload.cookie
     encoded
+  end
+
+  @doc """
+  Seals the envelope by returning an updated version of it containing the MAC.
+  """
+  @spec seal(SKEM.public_key(), t()) :: t()
+  def seal(spkt, envelope) do
+    encoded = encode(envelope)
+    mac_wire_data = :binary.part(encoded, {0, byte_size(encoded) - 32})
+
+    mac =
+      :binary.part(
+        Crypto.lhash("mac") |> Crypto.hash(spkt) |> Crypto.hash(mac_wire_data),
+        {0, 16}
+      )
+
+    Map.replace!(envelope, :mac, mac)
   end
 end
