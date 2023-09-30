@@ -11,4 +11,18 @@ defmodule Bunny.Crypto do
     true = byte_size(key) == 32
     :crypto.mac(:hmac, :blake2s, key, data)
   end
+
+  @doc """
+  A shorthand hash function derived from the protocol identifier.
+  """
+  @spec lhash(binary()) :: hash()
+  def lhash(data) do
+    hash(
+      hash(
+        <<0::256>>,
+        "rosenpass 1 rosenpass.eu aead=chachapoly1305 hash=blake2s ekem=kyber512 skem=mceliece460896 xaead=xchachapoly1305"
+      ),
+      data
+    )
+  end
 end
