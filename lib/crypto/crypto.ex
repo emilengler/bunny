@@ -1,8 +1,13 @@
 defmodule Bunny.Crypto do
+  alias Bunny.Crypto.SKEM
+  alias Bunny.Crypto.EKEM
   alias Bunny.Crypto.AEAD
 
   @type chaining_key :: key()
   @type hash :: binary()
+  @type kem :: :ekem | :skem
+  @type kem_ct :: EKEM.cipher_text() | SKEM.cipher_text()
+  @type kem_pk :: EKEM.public_key() | SKEM.public_key()
   @type key :: binary()
   @type session_id :: binary()
 
@@ -78,6 +83,22 @@ defmodule Bunny.Crypto do
     pt = AEAD.dec(k, n, ct, ad)
     ck = mix(ck, pt)
     {ck, pt}
+  end
+
+  @doc """
+  Encapsulates the key using a KEM.
+  """
+  @spec encaps_and_mix(kem(), chaining_key(), kem_pk()) :: {chaining_key(), kem_ct()}
+  def encaps_and_mix(kem, ck, pk) do
+    {ct, shk} =
+      case kem do
+        :ekem -> EKEM.enc(pk)
+        :skem -> SKEM.enc(pk)
+      end
+
+    ck = mix(ck, ct)
+    ck = mix(ck, shk)
+    {ck, ct}
   end
 
   @doc """
