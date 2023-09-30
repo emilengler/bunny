@@ -1,8 +1,23 @@
 defmodule Bunny.Crypto do
+  alias Bunny.Crypto.AEAD
+
   @type chaining_key :: key()
   @type hash :: binary()
   @type key :: binary()
   @type session_id :: binary()
+
+  @doc """
+  Encrypts data based on the current chaining key.
+  """
+  @spec encrypt_and_mix(chaining_key(), binary()) :: {chaining_key(), binary()}
+  def encrypt_and_mix(ck, pt) do
+    k = extract_key(ck, "handshake encryption")
+    n = <<0::96>>
+    ad = <<>>
+    ct = AEAD.enc(k, n, pt, ad)
+    ck = mix(ck, ct)
+    {ck, ct}
+  end
 
   @doc """
   Derives a key from the chaining key.
