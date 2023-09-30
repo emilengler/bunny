@@ -45,6 +45,14 @@ defmodule Bunny.Crypto do
   end
 
   @doc """
+  Mixes secrets and public values into the chaining key.
+  """
+  @spec mix(chaining_key(), binary()) :: chaining_key()
+  def mix(ck, data) do
+    hash(ck, hash(extract_key(ck, "mix"), data))
+  end
+
+  @doc """
   Generates a random session ID in a cryptographic strong fashion.
   """
   @spec random_session_id() :: session_id()
