@@ -13,6 +13,14 @@ defmodule Bunny.Crypto do
   end
 
   @doc """
+  Derives a key even further from the chaining key.
+  """
+  @spec export_key(chaining_key(), binary()) :: key()
+  def export_key(ck, data) do
+    extract_key(ck, "user" <> data)
+  end
+
+  @doc """
   A keyed hash function with one 32-byte input, one variable-size input, and one 32-byte output.
   As keyed hash function we use the HMAC construction with BLAKE2s as the inner hash function.
   """
