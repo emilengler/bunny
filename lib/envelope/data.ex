@@ -1,9 +1,11 @@
 defmodule Bunny.Envelope.Data do
+  alias Bunny.Envelope.Data
+
   defstruct sid: nil,
             ctr: nil,
             data: nil
 
-  @type t :: %Bunny.Envelope.Data{
+  @type t :: %Data{
           sid: binary(),
           ctr: binary(),
           data: binary()
@@ -17,7 +19,7 @@ defmodule Bunny.Envelope.Data do
     data = remaining
     true = byte_size(data) >= 16
 
-    %Bunny.Envelope.Data{
+    %Data{
       sid: sid,
       ctr: ctr,
       data: data

@@ -1,10 +1,12 @@
 defmodule Bunny.Envelope.InitConf do
+  alias Bunny.Envelope.InitConf
+
   defstruct sidi: nil,
             sidr: nil,
             biscuit: nil,
             auth: nil
 
-  @type t :: %Bunny.Envelope.InitConf{
+  @type t :: %InitConf{
           sidi: binary(),
           sidr: binary(),
           biscuit: binary(),
@@ -20,7 +22,7 @@ defmodule Bunny.Envelope.InitConf do
     <<auth::binary-size(16), remaining::binary>> = remaining
     true = byte_size(remaining) == 0
 
-    %Bunny.Envelope.InitConf{
+    %InitConf{
       sidi: sidi,
       sidr: sidr,
       biscuit: biscuit,

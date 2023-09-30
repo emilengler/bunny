@@ -1,11 +1,13 @@
 defmodule Bunny.Envelope.InitHello do
+  alias Bunny.Envelope.InitHello
+
   defstruct sidi: nil,
             epki: nil,
             sctr: nil,
             pidiC: nil,
             auth: nil
 
-  @type t :: %Bunny.Envelope.InitHello{
+  @type t :: %InitHello{
           sidi: binary(),
           epki: binary(),
           sctr: binary(),
@@ -23,7 +25,7 @@ defmodule Bunny.Envelope.InitHello do
     <<auth::binary-size(16), remaining::binary>> = remaining
     true = byte_size(remaining) == 0
 
-    %Bunny.Envelope.InitHello{
+    %InitHello{
       sidi: sidi,
       epki: epki,
       sctr: sctr,

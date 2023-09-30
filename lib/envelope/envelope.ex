@@ -1,10 +1,17 @@
 defmodule Bunny.Envelope do
+  alias Bunny.Envelope.Data
+  alias Bunny.Envelope.EmptyData
+  alias Bunny.Envelope.InitConf
+  alias Bunny.Envelope.RespHello
+  alias Bunny.Envelope.InitHello
+  alias Bunny.Envelope
+
   defstruct type: nil,
             payload: nil,
             mac: nil,
             cookie: nil
 
-  @type t :: %Bunny.Envelope{
+  @type t :: %Envelope{
           type: type(),
           payload: payload(),
           mac: mac(),
@@ -13,11 +20,11 @@ defmodule Bunny.Envelope do
 
   @type type :: :init_hello | :resp_hello | :init_conf | :empty_data | :data
   @type payload ::
-          Bunny.Envelope.InitHello.t()
-          | Bunny.Envelope.RespHello.t()
-          | Bunny.Envelope.InitConf.t()
-          | Bunny.Envelope.EmptyData.t()
-          | Bunny.Envelope.Data.t()
+          InitHello.t()
+          | RespHello.t()
+          | InitConf.t()
+          | EmptyData.t()
+          | Data.t()
   @type mac :: binary()
   @type cookie :: binary()
 
@@ -46,10 +53,10 @@ defmodule Bunny.Envelope do
   @spec decode_payload(type(), binary()) :: payload()
   defp decode_payload(type, packet) do
     case type do
-      :init_hello -> Bunny.Envelope.InitHello.decode(packet)
-      :resp_hello -> Bunny.Envelope.RespHello.decode(packet)
-      :empty_data -> Bunny.Envelope.EmptyData.decode(packet)
-      :data -> Bunny.Envelope.Data.decode(packet)
+      :init_hello -> InitHello.decode(packet)
+      :resp_hello -> RespHello.decode(packet)
+      :empty_data -> EmptyData.decode(packet)
+      :data -> Data.decode(packet)
     end
   end
 
@@ -67,7 +74,7 @@ defmodule Bunny.Envelope do
     type = decode_type(type)
     payload = decode_payload(type, payload)
 
-    %Bunny.Envelope{
+    %Envelope{
       type: type,
       payload: payload,
       mac: mac,
@@ -81,11 +88,11 @@ defmodule Bunny.Envelope do
 
     payload_enc =
       case payload.type do
-        :init_hello -> Bunny.Envelope.InitHello.encode(payload.payload)
-        :resp_hello -> Bunny.Envelope.RespHello.encode(payload.payload)
-        :init_conf -> Bunny.Envelope.InitConf.encode(payload.payload)
-        :empty_data -> Bunny.Envelope.EmptyData.encode(payload.payload)
-        :data -> Bunny.Envelope.Data.encode(payload.payload)
+        :init_hello -> InitHello.encode(payload.payload)
+        :resp_hello -> RespHello.encode(payload.payload)
+        :init_conf -> InitConf.encode(payload.payload)
+        :empty_data -> EmptyData.encode(payload.payload)
+        :data -> Data.encode(payload.payload)
       end
 
     encoded = type <> <<0, 0, 0>> <> payload_enc <> payload.mac <> payload.cookie

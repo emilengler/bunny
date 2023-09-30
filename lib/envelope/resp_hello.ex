@@ -1,4 +1,6 @@
 defmodule Bunny.Envelope.RespHello do
+  alias Bunny.Envelope.RespHello
+
   defstruct sidr: nil,
             sidi: nil,
             ecti: nil,
@@ -6,7 +8,7 @@ defmodule Bunny.Envelope.RespHello do
             biscuit: nil,
             auth: nil
 
-  @type t :: %Bunny.Envelope.RespHello{
+  @type t :: %RespHello{
           sidr: binary(),
           sidi: binary(),
           ecti: binary(),
@@ -26,7 +28,7 @@ defmodule Bunny.Envelope.RespHello do
     <<auth::binary-size(16), remaining::binary>> = remaining
     true = byte_size(remaining) == 0
 
-    %Bunny.Envelope.RespHello{
+    %RespHello{
       sidr: sidr,
       sidi: sidi,
       ecti: ecti,

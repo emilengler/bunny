@@ -1,9 +1,11 @@
 defmodule Bunny.Envelope.EmptyData do
+  alias Bunny.Envelope.EmptyData
+
   defstruct sid: nil,
             ctr: nil,
             auth: nil
 
-  @type t :: %Bunny.Envelope.EmptyData{
+  @type t :: %EmptyData{
           sid: binary(),
           ctr: binary(),
           auth: binary()
@@ -17,7 +19,7 @@ defmodule Bunny.Envelope.EmptyData do
     <<auth::binary-size(16), remaining::binary>> = remaining
     true = byte_size(remaining) == 0
 
-    %Bunny.Envelope.EmptyData{
+    %EmptyData{
       sid: sid,
       ctr: ctr,
       auth: auth
