@@ -27,13 +27,7 @@ defmodule Bunny.Crypto do
   """
   @spec lhash(binary()) :: hash()
   def lhash(data) do
-    hash(
-      hash(
-        <<0::256>>,
-        "rosenpass 1 rosenpass.eu aead=chachapoly1305 hash=blake2s ekem=kyber512 skem=mceliece460896 xaead=xchachapoly1305"
-      ),
-      data
-    )
+    hash(hash(<<0::256>>, "Rosenpass v1 mceliece460896 Kyber512 ChaChaPoly1305 BLAKE2s"), data)
   end
 
   @doc """
