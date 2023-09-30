@@ -8,6 +8,7 @@ defmodule Bunny.Crypto do
   @type kem :: :ekem | :skem
   @type kem_ct :: EKEM.cipher_text() | SKEM.cipher_text()
   @type kem_pk :: EKEM.public_key() | SKEM.public_key()
+  @type kem_sk :: EKEM.secret_key() | SKEM.secret_key()
   @type key :: binary()
   @type session_id :: binary()
 
@@ -99,6 +100,23 @@ defmodule Bunny.Crypto do
     ck = mix(ck, ct)
     ck = mix(ck, shk)
     {ck, ct}
+  end
+
+  @doc """
+  Decapsulates the key using a KEM.
+  """
+  @spec decaps_and_mix(kem(), chaining_key(), kem_sk(), kem_pk(), kem_ct()) :: chaining_key()
+  def decaps_and_mix(kem, ck, sk, pk, ct) do
+    shk =
+      case kem do
+        :ekem -> EKEM.dec(sk, ct)
+        :skem -> SKEM.dec(sk, ct)
+      end
+
+    ck = mix(ck, pk)
+    ck = mix(ck, ct)
+    ck = mix(ck, shk)
+    ck
   end
 
   @doc """
