@@ -1,6 +1,7 @@
 defmodule Bunny.Crypto do
   @type hash :: binary()
   @type key :: binary()
+  @type session_id :: binary()
 
   @doc """
   A keyed hash function with one 32-byte input, one variable-size input, and one 32-byte output.
@@ -24,5 +25,13 @@ defmodule Bunny.Crypto do
       ),
       data
     )
+  end
+
+  @doc """
+  Generates a random session ID in a cryptographic strong fashion.
+  """
+  @spec random_session_id() :: session_id()
+  def random_session_id() do
+    :crypto.strong_rand_bytes(4)
   end
 end
