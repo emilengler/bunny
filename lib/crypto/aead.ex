@@ -4,22 +4,16 @@ defmodule Bunny.Crypto.AEAD do
   We use ChaCha20Poly1305 in the implementation.
   """
 
-  @key_len 32
-  @nonce_len 12
+  @type secret_key :: <<_::256>>
+  @type nonce :: <<_::96>>
 
-  @spec enc(binary(), binary(), binary(), binary()) :: binary()
+  @spec enc(secret_key(), nonce(), binary(), binary()) :: binary()
   def enc(key, nonce, plaintext, additional_data) do
-    true = byte_size(key) == @key_len
-    true = byte_size(nonce) == @nonce_len
-
     :enacl.aead_chacha20poly1305_ietf_encrypt(plaintext, additional_data, nonce, key)
   end
 
-  @spec dec(binary(), binary(), binary(), binary()) :: binary()
+  @spec dec(secret_key(), nonce(), binary(), binary()) :: binary()
   def dec(key, nonce, ciphertext, additional_data) do
-    true = byte_size(key) == @key_len
-    true = byte_size(nonce) == @nonce_len
-
     :enacl.aead_chacha20poly1305_ietf_decrypt(ciphertext, additional_data, nonce, key)
   end
 end
