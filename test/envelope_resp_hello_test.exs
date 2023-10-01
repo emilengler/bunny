@@ -4,8 +4,8 @@ defmodule BunnyTest.Envelope.RespHello do
 
   test "decodes an envelope of type RespHello" do
     packet =
-      <<42::32, 69::32, 0::integer-size(768)-unit(8), 0::integer-size(188)-unit(8),
-        42::integer-size(116)-unit(8), 42::128>>
+      <<42::32, 69::32, 0::integer-size(768)-unit(8), 0::integer-size(188)-unit(8), 42::128,
+        42::integer-size(116)-unit(8)>>
 
     envelope = Bunny.Envelope.RespHello.decode(packet)
 
@@ -14,8 +14,8 @@ defmodule BunnyTest.Envelope.RespHello do
              sidi: <<69::32>>,
              ecti: <<0::integer-size(768)-unit(8)>>,
              scti: <<0::integer-size(188)-unit(8)>>,
-             biscuit: <<42::integer-size(116)-unit(8)>>,
-             auth: <<42::128>>
+             auth: <<42::128>>,
+             biscuit: <<42::integer-size(116)-unit(8)>>
            }
   end
 
@@ -25,14 +25,14 @@ defmodule BunnyTest.Envelope.RespHello do
       sidi: <<69::32>>,
       ecti: <<0::integer-size(768)-unit(8)>>,
       scti: <<0::integer-size(188)-unit(8)>>,
-      biscuit: <<42::integer-size(116)-unit(8)>>,
-      auth: <<42::128>>
+      auth: <<42::128>>,
+      biscuit: <<42::integer-size(116)-unit(8)>>
     }
 
     packet = Bunny.Envelope.RespHello.encode(envelope)
 
     assert packet ==
              <<42::32, 69::32, 0::integer-size(768)-unit(8), 0::integer-size(188)-unit(8),
-               42::integer-size(116)-unit(8), 42::128>>
+               42::128, 42::integer-size(116)-unit(8)>>
   end
 end

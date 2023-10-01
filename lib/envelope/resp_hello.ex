@@ -33,8 +33,8 @@ defmodule Bunny.Envelope.RespHello do
     <<sidi::binary-size(4), remaining::binary>> = remaining
     <<ecti::binary-size(768), remaining::binary>> = remaining
     <<scti::binary-size(188), remaining::binary>> = remaining
-    <<biscuit::binary-size(116), remaining::binary>> = remaining
-    <<auth::binary-size(16), _::binary>> = remaining
+    <<auth::binary-size(16), remaining::binary>> = remaining
+    <<biscuit::binary-size(116), _::binary>> = remaining
 
     %RespHello{
       sidr: sidr,
@@ -49,6 +49,6 @@ defmodule Bunny.Envelope.RespHello do
   @spec encode(t()) :: packet()
   def encode(payload) do
     payload.sidr <>
-      payload.sidi <> payload.ecti <> payload.scti <> payload.biscuit <> payload.auth
+      payload.sidi <> payload.ecti <> payload.scti <> payload.auth <> payload.biscuit
   end
 end
