@@ -7,11 +7,11 @@ defmodule Bunny.Protocol.Initiator do
   alias Bunny.Crypto.EKEM
   alias Bunny.Crypto
 
+  @type psk :: <<_::256>>
   @type state :: %{ck: Crypto.chaining_key(), eski: EKEM.secret_key(), epki: EKEM.public_key()}
 
-  @spec init_hello(SKEM.public_key(), SKEM.public_key(), binary()) :: {state(), Envelope.t()}
+  @spec init_hello(SKEM.public_key(), SKEM.public_key(), psk()) :: {state(), Envelope.t()}
   def init_hello(spki, spkr, psk) do
-    # TODO: Check lengths
     # TODO: Add logging
 
     # IHI1
