@@ -27,8 +27,8 @@ defmodule Bunny.Envelope do
           | InitConf.t()
           | EmptyData.t()
           | Data.t()
-  @type mac :: binary()
-  @type cookie :: binary()
+  @type mac :: <<_::128>>
+  @type cookie :: <<_::128>>
 
   @spec decode_type(integer()) :: type()
   defp decode_type(type) do

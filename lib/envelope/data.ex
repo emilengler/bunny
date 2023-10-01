@@ -5,13 +5,19 @@ defmodule Bunny.Envelope.Data do
             ctr: nil,
             data: nil
 
+  @type sid :: <<_::32>>
+  @type ctr :: <<_::64>>
+  @type data :: binary()
+
+  @type packet :: binary()
+
   @type t :: %Data{
-          sid: binary(),
-          ctr: binary(),
-          data: binary()
+          sid: sid(),
+          ctr: ctr(),
+          data: data()
         }
 
-  @spec decode(binary()) :: t()
+  @spec decode(packet()) :: t()
   def decode(packet) do
     remaining = packet
     <<sid::binary-size(4), remaining::binary>> = remaining
@@ -26,7 +32,7 @@ defmodule Bunny.Envelope.Data do
     }
   end
 
-  @spec encode(t()) :: binary()
+  @spec encode(t()) :: packet()
   def encode(payload) do
     encoded = payload.sid <> payload.ctr <> payload.data
     true = byte_size(encoded) >= 28

@@ -8,16 +8,25 @@ defmodule Bunny.Envelope.RespHello do
             biscuit: nil,
             auth: nil
 
+  @type sidr :: <<_::32>>
+  @type sidi :: <<_::32>>
+  @type ecti :: <<_::6144>>
+  @type scti :: <<_::1504>>
+  @type biscuit :: <<_::928>>
+  @type auth :: <<_::128>>
+
+  @type packet :: <<_::8768>>
+
   @type t :: %RespHello{
-          sidr: binary(),
-          sidi: binary(),
-          ecti: binary(),
-          scti: binary(),
-          biscuit: binary(),
-          auth: binary()
+          sidr: sidr(),
+          sidi: sidi(),
+          ecti: ecti(),
+          scti: scti(),
+          biscuit: biscuit(),
+          auth: auth()
         }
 
-  @spec decode(binary()) :: t()
+  @spec decode(packet()) :: t()
   def decode(packet) do
     remaining = packet
     <<sidr::binary-size(4), remaining::binary>> = remaining
@@ -25,8 +34,7 @@ defmodule Bunny.Envelope.RespHello do
     <<ecti::binary-size(768), remaining::binary>> = remaining
     <<scti::binary-size(188), remaining::binary>> = remaining
     <<biscuit::binary-size(116), remaining::binary>> = remaining
-    <<auth::binary-size(16), remaining::binary>> = remaining
-    true = byte_size(remaining) == 0
+    <<auth::binary-size(16), _::binary>> = remaining
 
     %RespHello{
       sidr: sidr,
@@ -38,13 +46,9 @@ defmodule Bunny.Envelope.RespHello do
     }
   end
 
-  @spec encode(t()) :: binary()
+  @spec encode(t()) :: packet()
   def encode(payload) do
-    encoded =
-      payload.sidr <>
-        payload.sidi <> payload.ecti <> payload.scti <> payload.biscuit <> payload.auth
-
-    true = byte_size(encoded) == 1096
-    encoded
+    payload.sidr <>
+      payload.sidi <> payload.ecti <> payload.scti <> payload.biscuit <> payload.auth
   end
 end

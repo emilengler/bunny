@@ -5,19 +5,24 @@ defmodule Bunny.Envelope.EmptyData do
             ctr: nil,
             auth: nil
 
+  @type sid :: <<_::32>>
+  @type ctr :: <<_::64>>
+  @type auth :: <<_::128>>
+
+  @type packet :: <<_::224>>
+
   @type t :: %EmptyData{
-          sid: binary(),
-          ctr: binary(),
-          auth: binary()
+          sid: sid(),
+          ctr: ctr(),
+          auth: auth()
         }
 
-  @spec decode(binary()) :: t()
+  @spec decode(packet()) :: t()
   def decode(packet) do
     remaining = packet
     <<sid::binary-size(4), remaining::binary>> = remaining
     <<ctr::binary-size(8), remaining::binary>> = remaining
-    <<auth::binary-size(16), remaining::binary>> = remaining
-    true = byte_size(remaining) == 0
+    <<auth::binary-size(16), _::binary>> = remaining
 
     %EmptyData{
       sid: sid,
@@ -26,10 +31,8 @@ defmodule Bunny.Envelope.EmptyData do
     }
   end
 
-  @spec encode(t()) :: binary()
+  @spec encode(t()) :: packet()
   def encode(payload) do
-    encoded = payload.sid <> payload.ctr <> payload.auth
-    true = byte_size(encoded) == 28
-    encoded
+    payload.sid <> payload.ctr <> payload.auth
   end
 end

@@ -6,21 +6,27 @@ defmodule Bunny.Envelope.InitConf do
             biscuit: nil,
             auth: nil
 
+  @type sidi :: <<_::32>>
+  @type sidr :: <<_::32>>
+  @type biscuit :: <<_::928>>
+  @type auth :: <<_::128>>
+
+  @type packet :: <<_::1120>>
+
   @type t :: %InitConf{
-          sidi: binary(),
-          sidr: binary(),
-          biscuit: binary(),
-          auth: binary()
+          sidi: sidi(),
+          sidr: sidr(),
+          biscuit: biscuit(),
+          auth: auth()
         }
 
-  @spec decode(binary()) :: t()
+  @spec decode(packet()) :: t()
   def decode(packet) do
     remaining = packet
     <<sidi::binary-size(4), remaining::binary>> = remaining
     <<sidr::binary-size(4), remaining::binary>> = remaining
     <<biscuit::binary-size(116), remaining::binary>> = remaining
-    <<auth::binary-size(16), remaining::binary>> = remaining
-    true = byte_size(remaining) == 0
+    <<auth::binary-size(16), _::binary>> = remaining
 
     %InitConf{
       sidi: sidi,
@@ -30,10 +36,8 @@ defmodule Bunny.Envelope.InitConf do
     }
   end
 
-  @spec encode(t()) :: binary()
+  @spec encode(t()) :: packet()
   def encode(payload) do
-    encoded = payload.sidi <> payload.sidr <> payload.biscuit <> payload.auth
-    true = byte_size(encoded) == 140
-    encoded
+    payload.sidi <> payload.sidr <> payload.biscuit <> payload.auth
   end
 end

@@ -7,23 +7,30 @@ defmodule Bunny.Envelope.InitHello do
             pidiC: nil,
             auth: nil
 
+  @type sidi :: <<_::16>>
+  @type epki :: <<_::6400>>
+  @type sctr :: <<_::1504>>
+  @type pidiC :: <<_::384>>
+  @type auth :: <<_::128>>
+
+  @type packet :: <<_::8448>>
+
   @type t :: %InitHello{
-          sidi: binary(),
-          epki: binary(),
-          sctr: binary(),
-          pidiC: binary(),
-          auth: binary()
+          sidi: sidi(),
+          epki: epki(),
+          sctr: sctr(),
+          pidiC: pidiC(),
+          auth: auth()
         }
 
-  @spec decode(binary()) :: t()
+  @spec decode(packet()) :: t()
   def decode(packet) do
     remaining = packet
     <<sidi::binary-size(4), remaining::binary>> = remaining
     <<epki::binary-size(800), remaining::binary>> = remaining
     <<sctr::binary-size(188), remaining::binary>> = remaining
     <<pidiC::binary-size(48), remaining::binary>> = remaining
-    <<auth::binary-size(16), remaining::binary>> = remaining
-    true = byte_size(remaining) == 0
+    <<auth::binary-size(16), _::binary>> = remaining
 
     %InitHello{
       sidi: sidi,
@@ -34,10 +41,8 @@ defmodule Bunny.Envelope.InitHello do
     }
   end
 
-  @spec encode(t()) :: binary()
+  @spec encode(t()) :: packet()
   def encode(payload) do
-    encoded = payload.sidi <> payload.epki <> payload.sctr <> payload.pidiC <> payload.auth
-    true = byte_size(encoded) == 1056
-    encoded
+    payload.sidi <> payload.epki <> payload.sctr <> payload.pidiC <> payload.auth
   end
 end
