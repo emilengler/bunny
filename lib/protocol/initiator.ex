@@ -9,12 +9,28 @@ defmodule Bunny.Protocol.Initiator do
   alias Bunny.Crypto
 
   @type psk :: <<_::256>>
-  @type state :: %{ck: Crypto.chaining_key(), eski: EKEM.secret_key(), epki: EKEM.public_key()}
+  @type state :: any()
 
-  @spec init_hello(SKEM.public_key(), SKEM.public_key(), psk()) :: {state(), Envelope.t()}
-  def init_hello(spki, spkr, psk) do
+  @doc """
+  Initializes the state with all keys.
+  """
+  @spec init({SKEM.public_key(), SKEM.secret_key()}, SKEM.public_key(), psk()) :: state()
+  def init({spki, sski}, spkr, psk) do
+    %{
+      spki: spki,
+      spkr: spkr,
+      sski: sski,
+      psk: psk
+    }
+  end
+
+  @doc """
+  Performs the `InitHello` by updating the state and returning the appropriate envelope.
+  """
+  @spec init_hello(state()) :: {state(), Envelope.t()}
+  def init_hello(state) do
     # IHI1
-    ck = Crypto.hash(Crypto.lhash("chaining key init"), spkr)
+    ck = Crypto.hash(Crypto.lhash("chaining key init"), state.spkr)
     # IHI2
     sidi = Crypto.random_session_id()
     # IHI3
@@ -23,13 +39,13 @@ defmodule Bunny.Protocol.Initiator do
     ck = Crypto.mix(ck, sidi)
     ck = Crypto.mix(ck, epki)
     # IHI5
-    {ck, sctr} = Crypto.encaps_and_mix(:skem, ck, spkr)
+    {ck, sctr} = Crypto.encaps_and_mix(:skem, ck, state.spkr)
     # IHI6
-    pidi = Crypto.hash(Crypto.lhash("peer id"), spki)
+    pidi = Crypto.hash(Crypto.lhash("peer id"), state.spki)
     {ck, pidiC} = Crypto.encrypt_and_mix(ck, pidi)
     # IHI7
-    ck = Crypto.mix(ck, spki)
-    ck = Crypto.mix(ck, psk)
+    ck = Crypto.mix(ck, state.spki)
+    ck = Crypto.mix(ck, state.psk)
     # IHI8
     {ck, auth} = Crypto.encrypt_and_mix(ck, <<>>)
 
@@ -47,11 +63,16 @@ defmodule Bunny.Protocol.Initiator do
     }
 
     Logger.debug("Generated InitHello #{inspect(envelope)}")
-    envelope = Envelope.seal(spkr, envelope)
+    envelope = Envelope.seal(state.spkr, envelope)
     Logger.debug("Sealed InitHello with MAC #{inspect(envelope.mac)}")
 
     Logger.info("Generated InitHello")
 
-    {%{ck: ck, eski: eski, epki: epki}, envelope}
+    state = Map.put(state, :ck, ck)
+    state = Map.put(state, :epki, epki)
+    state = Map.put(state, :eski, eski)
+    state = Map.put(state, :sidi, sidi)
+
+    {state, envelope}
   end
 end
