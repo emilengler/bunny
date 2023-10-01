@@ -39,19 +39,19 @@ defmodule Bunny.Crypto do
   end
 
   @doc """
-  Derives a key from the chaining key.
+  A shorthand hash function derived from the chaining key extract.
   """
-  @spec extract_key(chaining_key(), binary()) :: key()
-  def extract_key(ck, data) do
-    hash(ck, lhash("chaining key extract" <> data))
+  @spec extract_key(binary()) :: key()
+  def extract_key(data) do
+    hash(lhash("chaining key extract"), data)
   end
 
   @doc """
-  Derives a key even further from the chaining key.
+  A shorthand hash function derived from the user.
   """
-  @spec export_key(chaining_key(), binary()) :: key()
-  def export_key(ck, data) do
-    extract_key(ck, "user" <> data)
+  @spec export_key(binary()) :: key()
+  def export_key(data) do
+    hash(extract_key("user"), data)
   end
 
   @doc """
@@ -59,7 +59,7 @@ defmodule Bunny.Crypto do
   """
   @spec mix(chaining_key(), binary()) :: chaining_key()
   def mix(ck, data) do
-    hash(ck, hash(extract_key(ck, "mix"), data))
+    hash(hash(ck, extract_key("mix")), data)
   end
 
   @doc """
@@ -67,7 +67,7 @@ defmodule Bunny.Crypto do
   """
   @spec encrypt_and_mix(chaining_key(), binary()) :: {chaining_key(), binary()}
   def encrypt_and_mix(ck, pt) do
-    k = extract_key(ck, "handshake encryption")
+    k = hash(ck, extract_key("handshake encryption"))
     n = <<0::96>>
     ad = <<>>
     ct = AEAD.enc(k, n, pt, ad)
@@ -80,7 +80,7 @@ defmodule Bunny.Crypto do
   """
   @spec decrypt_and_mix(chaining_key(), binary()) :: {chaining_key(), binary()}
   def decrypt_and_mix(ck, ct) do
-    k = extract_key(ck, "handshake encryption")
+    k = hash(ck, extract_key("handshake encryption"))
     n = <<0::96>>
     ad = <<>>
     pt = AEAD.dec(k, n, ct, ad)
