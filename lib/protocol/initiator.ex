@@ -26,6 +26,8 @@ defmodule Bunny.Protocol.Initiator do
 
   @doc """
   Performs the `InitHello` by updating the state and returning the appropriate envelope.
+
+  TODO: Only return the payload, that is, Envelope.InitHello.t()
   """
   @spec init_hello(state()) :: {state(), Envelope.t()}
   def init_hello(state) do
