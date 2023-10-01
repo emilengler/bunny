@@ -3,6 +3,8 @@ defmodule Bunny.Crypto do
   alias Bunny.Crypto.EKEM
   alias Bunny.Crypto.AEAD
 
+  @key_len 32
+
   @type chaining_key :: key()
   @type hash :: binary()
   @type kem :: :ekem | :skem
@@ -18,7 +20,7 @@ defmodule Bunny.Crypto do
   """
   @spec hash(key(), binary()) :: hash()
   def hash(key, data) do
-    true = byte_size(key) == 32
+    true = byte_size(key) == @key_len
 
     ipad = :binary.list_to_bin(List.duplicate(0x36, 32))
     opad = :binary.list_to_bin(List.duplicate(0x5C, 32))
