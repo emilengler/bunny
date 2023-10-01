@@ -99,8 +99,9 @@ defmodule Bunny.Crypto do
         :skem -> SKEM.enc(pk)
       end
 
-    ck = mix(ck, ct)
+    ck = mix(ck, pk)
     ck = mix(ck, shk)
+    ck = mix(ck, ct)
     {ck, ct}
   end
 
@@ -116,8 +117,8 @@ defmodule Bunny.Crypto do
       end
 
     ck = mix(ck, pk)
-    ck = mix(ck, ct)
     ck = mix(ck, shk)
+    ck = mix(ck, ct)
     ck
   end
 
