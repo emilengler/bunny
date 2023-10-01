@@ -77,4 +77,30 @@ defmodule Bunny.Protocol.Initiator do
 
     {state, envelope}
   end
+
+  @spec resp_hello(state(), Envelope.RespHello.t()) :: state()
+  def resp_hello(state, rh) do
+    ck = state.ck
+
+    # RHI3
+    ck = Crypto.mix(ck, rh.sidr)
+    ck = Crypto.mix(ck, state.sidi)
+
+    # RHI4
+    ck = Crypto.decaps_and_mix(:ekem, ck, state.eski, state.epki, rh.ecti)
+
+    # RHI5
+    ck = Crypto.decaps_and_mix(:skem, ck, state.sski, state.spki, rh.scti)
+
+    # RHI6
+    ck = Crypto.mix(ck, rh.biscuit)
+
+    # RHI7
+    {ck, _} = Crypto.decrypt_and_mix(ck, rh.auth)
+
+    Logger.info("Handled RespHello")
+
+    state = Map.put(state, :ck, ck)
+    state
+  end
 end
