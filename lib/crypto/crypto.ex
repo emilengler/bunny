@@ -81,7 +81,7 @@ defmodule Bunny.Crypto do
     k = hash(ck, extract_key("handshake encryption"))
     n = <<0::96>>
     ad = <<>>
-    pt = AEAD.dec(k, n, ct, ad)
+    <<pt::binary>> = AEAD.dec(k, n, ct, ad)
     ck = mix(ck, pt)
     {ck, pt}
   end
