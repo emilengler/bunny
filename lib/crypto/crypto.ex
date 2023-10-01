@@ -82,7 +82,7 @@ defmodule Bunny.Crypto do
     n = <<0::96>>
     ad = <<>>
     <<pt::binary>> = AEAD.dec(k, n, ct, ad)
-    ck = mix(ck, pt)
+    ck = mix(ck, ct)
     {ck, pt}
   end
 
