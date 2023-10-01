@@ -2,6 +2,7 @@ defmodule Bunny.Protocol.Initiator do
   @moduledoc """
   The Rosenpass protocol initiator.
   """
+  require Logger
   alias Bunny.Crypto.SKEM
   alias Bunny.Envelope
   alias Bunny.Crypto.EKEM
@@ -12,8 +13,6 @@ defmodule Bunny.Protocol.Initiator do
 
   @spec init_hello(SKEM.public_key(), SKEM.public_key(), psk()) :: {state(), Envelope.t()}
   def init_hello(spki, spkr, psk) do
-    # TODO: Add logging
-
     # IHI1
     ck = Crypto.hash(Crypto.lhash("chaining key init"), spkr)
     # IHI2
@@ -47,7 +46,11 @@ defmodule Bunny.Protocol.Initiator do
       cookie: <<0::128>>
     }
 
+    Logger.debug("Generated InitHello #{inspect(envelope)}")
     envelope = Envelope.seal(spkr, envelope)
+    Logger.debug("Sealed InitHello with MAC #{inspect(envelope.mac)}")
+
+    Logger.info("Generated InitHello")
 
     {%{ck: ck, eski: eski, epki: epki}, envelope}
   end
