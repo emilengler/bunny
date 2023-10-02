@@ -104,8 +104,8 @@ defmodule Bunny.Envelope do
   @doc """
   Seals the envelope by returning an updated version of it containing the MAC.
   """
-  @spec seal(SKEM.public_key(), t()) :: t()
-  def seal(spkt, envelope) do
+  @spec seal(t(), SKEM.public_key()) :: t()
+  def seal(envelope, spkt) do
     encoded = encode(envelope)
     mac_wire_data = :binary.part(encoded, {0, byte_size(encoded) - 32})
 
