@@ -114,7 +114,6 @@ defmodule Bunny.Protocol.Initiator do
 
     # ICI4
     {ck, auth} = Crypto.encrypt_and_mix(ck, <<>>)
-    IO.inspect(ck)
 
     # ICI7
     # TODO
