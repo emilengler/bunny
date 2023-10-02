@@ -24,8 +24,7 @@ defmodule Bunny.Crypto do
     ikey = :crypto.exor(key, ipad)
     okey = :crypto.exor(key, opad)
 
-    outer_data = Blake2.hash2b(data, 32, ikey)
-    Blake2.hash2b(outer_data, 32, okey)
+    Blake2.hash2b(data, 32, ikey) |> Blake2.hash2b(32, okey)
   end
 
   @doc """
@@ -33,7 +32,7 @@ defmodule Bunny.Crypto do
   """
   @spec lhash(binary()) :: hash()
   def lhash(data) do
-    hash(hash(<<0::256>>, "Rosenpass v1 mceliece460896 Kyber512 ChaChaPoly1305 BLAKE2s"), data)
+    hash(<<0::256>>, "Rosenpass v1 mceliece460896 Kyber512 ChaChaPoly1305 BLAKE2s") |> hash(data)
   end
 
   @doc """
@@ -41,7 +40,7 @@ defmodule Bunny.Crypto do
   """
   @spec extract_key(binary()) :: key()
   def extract_key(data) do
-    hash(lhash("chaining key extract"), data)
+    lhash("chaining key extract") |> hash(data)
   end
 
   @doc """
@@ -49,7 +48,7 @@ defmodule Bunny.Crypto do
   """
   @spec export_key(binary()) :: key()
   def export_key(data) do
-    hash(extract_key("user"), data)
+    extract_key("user") |> hash(data)
   end
 
   @doc """
@@ -57,7 +56,7 @@ defmodule Bunny.Crypto do
   """
   @spec mix(chaining_key(), binary()) :: chaining_key()
   def mix(ck, data) do
-    hash(hash(ck, extract_key("mix")), data)
+    ck |> hash(extract_key("mix")) |> hash(data)
   end
 
   @doc """
@@ -65,7 +64,7 @@ defmodule Bunny.Crypto do
   """
   @spec encrypt_and_mix(chaining_key(), binary()) :: {chaining_key(), binary()}
   def encrypt_and_mix(ck, pt) do
-    k = hash(ck, extract_key("handshake encryption"))
+    k = ck |> hash(extract_key("handshake encryption"))
     n = <<0::96>>
     ad = <<>>
     ct = AEAD.enc(k, n, pt, ad)
@@ -78,7 +77,7 @@ defmodule Bunny.Crypto do
   """
   @spec decrypt_and_mix(chaining_key(), binary()) :: {chaining_key(), binary()}
   def decrypt_and_mix(ck, ct) do
-    k = hash(ck, extract_key("handshake encryption"))
+    k = ck |> hash(extract_key("handshake encryption"))
     n = <<0::96>>
     ad = <<>>
     <<pt::binary>> = AEAD.dec(k, n, ct, ad)
@@ -97,9 +96,7 @@ defmodule Bunny.Crypto do
         :skem -> SKEM.enc(pk)
       end
 
-    ck = mix(ck, pk)
-    ck = mix(ck, shk)
-    ck = mix(ck, ct)
+    ck = ck |> mix(pk) |> mix(shk) |> mix(ct)
     {ck, ct}
   end
 
@@ -114,10 +111,7 @@ defmodule Bunny.Crypto do
         :skem -> SKEM.dec(sk, ct)
       end
 
-    ck = mix(ck, pk)
-    ck = mix(ck, shk)
-    ck = mix(ck, ct)
-    ck
+    ck |> mix(pk) |> mix(shk) |> mix(ct)
   end
 
   @doc """
