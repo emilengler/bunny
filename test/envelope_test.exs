@@ -34,4 +34,46 @@ defmodule BunnyTest.Envelope do
     packet = Envelope.encode(envelope)
     assert packet == <<0x85, 0, 0, 0, 42::32, 69::64, 0::256, 0::128, 0::128>>
   end
+
+  test "seals and verifies an envelope (random key)" do
+    pk = :crypto.strong_rand_bytes(512_000)
+
+    envelope = %Envelope{
+      type: :data,
+      payload: %Envelope.Data{
+        sid: <<42::32>>,
+        ctr: <<69::64>>,
+        data: <<0::256>>
+      },
+      mac: <<0::128>>,
+      cookie: <<0::128>>
+    }
+
+    envelope_sealed = Envelope.seal(envelope, pk)
+    assert Envelope.verify(envelope_sealed, pk)
+    assert !Envelope.verify(envelope, pk)
+  end
+
+  test "seals and verifies an envelope (static key)" do
+    pk = <<42::4_096_000>>
+
+    envelope = %Envelope{
+      type: :data,
+      payload: %Envelope.Data{
+        sid: <<42::32>>,
+        ctr: <<69::64>>,
+        data: <<0::256>>
+      },
+      mac: <<0::128>>,
+      cookie: <<0::128>>
+    }
+
+    envelope_sealed = Envelope.seal(envelope, pk)
+
+    assert envelope_sealed.mac ==
+             <<206, 249, 25, 6, 26, 71, 24, 175, 19, 1, 188, 124, 152, 53, 185, 183>>
+
+    assert Envelope.verify(envelope_sealed, pk)
+    assert !Envelope.verify(envelope, pk)
+  end
 end
