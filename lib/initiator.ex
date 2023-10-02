@@ -1,4 +1,4 @@
-defmodule Bunny.Protocol.Initiator do
+defmodule Bunny.Initiator do
   require Logger
   alias Bunny.Crypto.SKEM
   alias Bunny.Envelope
