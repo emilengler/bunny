@@ -3,6 +3,10 @@ defmodule Bunny.Crypto do
   alias Bunny.Crypto.EKEM
   alias Bunny.Crypto.AEAD
 
+  @moduledoc """
+  Provides basic cryptographic helper functions, most of them being defined in the whitepaper.
+  """
+
   @type chaining_key :: key()
   @type hash :: <<_::128>>
   @type kem :: :ekem | :skem
