@@ -1,7 +1,7 @@
 defmodule BunnyTest.Envelope.EmptyData do
   alias Bunny.Envelope.EmptyData
   use ExUnit.Case, async: true
-  doctest Bunny
+  doctest EmptyData
 
   test "decodes an envelope of type RespHello" do
     packet = <<0::32, 42::64, 69::128>>

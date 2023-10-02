@@ -1,7 +1,7 @@
 defmodule BunnyTest.Envelope.InitHello do
   alias Bunny.Envelope.InitHello
   use ExUnit.Case, async: true
-  doctest Bunny
+  doctest InitHello
 
   test "decodes an envelope of type InitHello" do
     packet =
