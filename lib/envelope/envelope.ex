@@ -121,4 +121,18 @@ defmodule Bunny.Envelope do
 
     Map.replace!(envelope, :mac, mac)
   end
+
+  @spec verify(t(), SKEM.public_key()) :: boolean()
+  def verify(envelope, spkm) do
+    encoded = encode(envelope)
+    mac_wire_data = :binary.part(encoded, {0, byte_size(encoded) - 32})
+
+    mac =
+      :binary.part(
+        Crypto.lhash("mac") |> Crypto.hash(spkm) |> Crypto.hash(mac_wire_data),
+        {0, 16}
+      )
+
+    envelope.mac == mac
+  end
 end
