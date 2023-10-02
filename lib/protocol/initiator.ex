@@ -75,6 +75,9 @@ defmodule Bunny.Protocol.Initiator do
     {state, payload}
   end
 
+  @doc """
+  Performs the `RespHello` by accepting an `RespHello` and returning the updated state.
+  """
   @spec resp_hello(state(), Envelope.RespHello.t()) :: state()
   def resp_hello(state, rh) do
     ck = state.ck
@@ -99,6 +102,9 @@ defmodule Bunny.Protocol.Initiator do
     state |> Map.put(:ck, ck) |> Map.put(:biscuit, rh.biscuit) |> Map.put(:sidr, rh.sidr)
   end
 
+  @doc """
+  Performs the `InitConf` by updating the state and returning the appropriate payload.
+  """
   @spec init_conf(state()) :: {state(), Envelope.InitConf.t()}
   def init_conf(state) do
     ck = state.ck
@@ -127,6 +133,11 @@ defmodule Bunny.Protocol.Initiator do
     {state, payload}
   end
 
+  @doc """
+  Finalizes the state by deriving all required keys from it.
+
+  Returns a map containing the `osk`, `txki`, and `txkr`.
+  """
   @spec final(state()) :: keys()
   def final(state) do
     osk =
