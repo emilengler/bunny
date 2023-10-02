@@ -90,6 +90,36 @@ defmodule Bunny.Protocol.Initiator do
     Logger.info("Handled RespHello")
 
     state = Map.put(state, :ck, ck)
+    state = Map.put(state, :biscuit, rh.biscuit)
+    state = Map.put(state, :sidr, rh.sidr)
+
     state
+  end
+
+  @spec init_conf(state()) :: {state(), Envelope.InitConf.t()}
+  def init_conf(state) do
+    ck = state.ck
+
+    # ICI3
+    ck = Crypto.mix(ck, state.sidi)
+    ck = Crypto.mix(ck, state.sidr)
+
+    # ICI4
+    {ck, auth} = Crypto.encrypt_and_mix(ck, <<>>)
+    IO.inspect(ck)
+
+    # ICI7
+    # TODO
+
+    payload = %Envelope.InitConf{
+      sidi: state.sidi,
+      sidr: state.sidr,
+      biscuit: state.biscuit,
+      auth: auth
+    }
+
+    state = %{ck: ck}
+
+    {state, payload}
   end
 end
