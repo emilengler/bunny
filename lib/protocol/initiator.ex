@@ -25,11 +25,9 @@ defmodule Bunny.Protocol.Initiator do
   end
 
   @doc """
-  Performs the `InitHello` by updating the state and returning the appropriate envelope.
-
-  TODO: Only return the payload, that is, Envelope.InitHello.t()
+  Performs the `InitHello` by updating the state and returning the appropriate payload.
   """
-  @spec init_hello(state()) :: {state(), Envelope.t()}
+  @spec init_hello(state()) :: {state(), Envelope.InitHello.t()}
   def init_hello(state) do
     # IHI1
     ck = Crypto.hash(Crypto.lhash("chaining key init"), state.spkr)
@@ -51,22 +49,13 @@ defmodule Bunny.Protocol.Initiator do
     # IHI8
     {ck, auth} = Crypto.encrypt_and_mix(ck, <<>>)
 
-    envelope = %Envelope{
-      type: :init_hello,
-      payload: %Envelope.InitHello{
-        sidi: sidi,
-        epki: epki,
-        sctr: sctr,
-        pidiC: pidiC,
-        auth: auth
-      },
-      mac: <<0::128>>,
-      cookie: <<0::128>>
+    envelope = %Envelope.InitHello{
+      sidi: sidi,
+      epki: epki,
+      sctr: sctr,
+      pidiC: pidiC,
+      auth: auth
     }
-
-    Logger.debug("Generated InitHello #{inspect(envelope)}")
-    envelope = Envelope.seal(state.spkr, envelope)
-    Logger.debug("Sealed InitHello with MAC #{inspect(envelope.mac)}")
 
     Logger.info("Generated InitHello")
 
