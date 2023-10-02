@@ -31,23 +31,30 @@ defmodule Bunny.Protocol.Initiator do
   def init_hello(state) do
     # IHI1
     ck = Crypto.lhash("chaining key init") |> Crypto.hash(state.spkr)
+
     # IHI2
     sidi = Crypto.random_session_id()
+
     # IHI3
     {epki, eski} = EKEM.gen_key()
+
     # IHI4
     ck = ck |> Crypto.mix(sidi) |> Crypto.mix(epki)
+
     # IHI5
     {ck, sctr} = Crypto.encaps_and_mix(:skem, ck, state.spkr)
+
     # IHI6
     pidi = Crypto.hash(Crypto.lhash("peer id"), state.spki)
     {ck, pidiC} = Crypto.encrypt_and_mix(ck, pidi)
+
     # IHI7
     ck = ck |> Crypto.mix(state.spki) |> Crypto.mix(state.psk)
+
     # IHI8
     {ck, auth} = Crypto.encrypt_and_mix(ck, <<>>)
 
-    envelope = %Envelope.InitHello{
+    payload = %Envelope.InitHello{
       sidi: sidi,
       epki: epki,
       sctr: sctr,
@@ -64,7 +71,7 @@ defmodule Bunny.Protocol.Initiator do
       |> Map.put(:eski, eski)
       |> Map.put(:sidi, sidi)
 
-    {state, envelope}
+    {state, payload}
   end
 
   @spec resp_hello(state(), Envelope.RespHello.t()) :: state()
