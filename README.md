@@ -9,5 +9,6 @@
 
 *Bunny* is a toy implementation of Rosenpass written in the Elixir programming language.
 It is written from scratch for the purpose of teaching myself the Rosenpass protocol in each and every aspect.
-Because this is a toy project of an cryptographic application, users should *cautions* in using this.
+
+Because this is a toy project of an cryptographic application, users should be *cautions* in using this.
 If you really want to achieve a post-quantum WireGuard tunnel, I strongly recommend going with the [reference implementation](https://github.com/rosenpass/rosenpass).
