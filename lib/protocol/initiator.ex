@@ -8,6 +8,7 @@ defmodule Bunny.Protocol.Initiator do
   alias Bunny.Crypto.EKEM
   alias Bunny.Crypto
 
+  @type keys :: %{osk: Crypto.key(), txki: Crypto.key(), txkr: Crypto.key()}
   @type psk :: <<_::256>>
   @type state :: any()
 
@@ -124,5 +125,16 @@ defmodule Bunny.Protocol.Initiator do
     state = %{ck: ck}
 
     {state, payload}
+  end
+
+  @spec final(state()) :: keys()
+  def final(state) do
+    osk =
+      state.ck |> Crypto.hash(Crypto.export_key("rosenpass.eu") |> Crypto.hash("wireguard psk"))
+
+    txki = state.ck |> Crypto.hash(Crypto.extract_key("initiator payload encryption"))
+    txkr = state.ck |> Crypto.hash(Crypto.extract_key("responder payload encryption"))
+
+    %{osk: osk, txki: txki, txkr: txkr}
   end
 end
