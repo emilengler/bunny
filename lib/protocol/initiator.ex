@@ -30,22 +30,20 @@ defmodule Bunny.Protocol.Initiator do
   @spec init_hello(state()) :: {state(), Envelope.InitHello.t()}
   def init_hello(state) do
     # IHI1
-    ck = Crypto.hash(Crypto.lhash("chaining key init"), state.spkr)
+    ck = Crypto.lhash("chaining key init") |> Crypto.hash(state.spkr)
     # IHI2
     sidi = Crypto.random_session_id()
     # IHI3
     {epki, eski} = EKEM.gen_key()
     # IHI4
-    ck = Crypto.mix(ck, sidi)
-    ck = Crypto.mix(ck, epki)
+    ck = ck |> Crypto.mix(sidi) |> Crypto.mix(epki)
     # IHI5
     {ck, sctr} = Crypto.encaps_and_mix(:skem, ck, state.spkr)
     # IHI6
     pidi = Crypto.hash(Crypto.lhash("peer id"), state.spki)
     {ck, pidiC} = Crypto.encrypt_and_mix(ck, pidi)
     # IHI7
-    ck = Crypto.mix(ck, state.spki)
-    ck = Crypto.mix(ck, state.psk)
+    ck = ck |> Crypto.mix(state.spki) |> Crypto.mix(state.psk)
     # IHI8
     {ck, auth} = Crypto.encrypt_and_mix(ck, <<>>)
 
@@ -59,10 +57,12 @@ defmodule Bunny.Protocol.Initiator do
 
     Logger.info("Generated InitHello")
 
-    state = Map.put(state, :ck, ck)
-    state = Map.put(state, :epki, epki)
-    state = Map.put(state, :eski, eski)
-    state = Map.put(state, :sidi, sidi)
+    state =
+      state
+      |> Map.put(:ck, ck)
+      |> Map.put(:epki, epki)
+      |> Map.put(:eski, eski)
+      |> Map.put(:sidi, sidi)
 
     {state, envelope}
   end
@@ -72,8 +72,7 @@ defmodule Bunny.Protocol.Initiator do
     ck = state.ck
 
     # RHI3
-    ck = Crypto.mix(ck, rh.sidr)
-    ck = Crypto.mix(ck, state.sidi)
+    ck = ck |> Crypto.mix(rh.sidr) |> Crypto.mix(state.sidi)
 
     # RHI4
     ck = Crypto.decaps_and_mix(:ekem, ck, state.eski, state.epki, rh.ecti)
@@ -82,18 +81,14 @@ defmodule Bunny.Protocol.Initiator do
     ck = Crypto.decaps_and_mix(:skem, ck, state.sski, state.spki, rh.scti)
 
     # RHI6
-    ck = Crypto.mix(ck, rh.biscuit)
+    ck = ck |> Crypto.mix(rh.biscuit)
 
     # RHI7
     {ck, _} = Crypto.decrypt_and_mix(ck, rh.auth)
 
     Logger.info("Handled RespHello")
 
-    state = Map.put(state, :ck, ck)
-    state = Map.put(state, :biscuit, rh.biscuit)
-    state = Map.put(state, :sidr, rh.sidr)
-
-    state
+    state |> Map.put(:ck, ck) |> Map.put(:biscuit, rh.biscuit) |> Map.put(:sidr, rh.sidr)
   end
 
   @spec init_conf(state()) :: {state(), Envelope.InitConf.t()}
@@ -101,8 +96,7 @@ defmodule Bunny.Protocol.Initiator do
     ck = state.ck
 
     # ICI3
-    ck = Crypto.mix(ck, state.sidi)
-    ck = Crypto.mix(ck, state.sidr)
+    ck = ck |> Crypto.mix(state.sidi) |> Crypto.mix(state.sidr)
 
     # ICI4
     {ck, auth} = Crypto.encrypt_and_mix(ck, <<>>)
