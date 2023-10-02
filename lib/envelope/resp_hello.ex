@@ -8,6 +8,10 @@ defmodule Bunny.Envelope.RespHello do
             biscuit: nil,
             auth: nil
 
+  @moduledoc """
+  Provides functions for dealing with `RespHello` payloads.
+  """
+
   @type sidr :: <<_::32>>
   @type sidi :: <<_::32>>
   @type ecti :: <<_::6144>>

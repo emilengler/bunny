@@ -6,6 +6,10 @@ defmodule Bunny.Envelope.InitConf do
             biscuit: nil,
             auth: nil
 
+  @moduledoc """
+  Provides functions for dealing with `InitConf` payloads.
+  """
+
   @type sidi :: <<_::32>>
   @type sidr :: <<_::32>>
   @type biscuit :: <<_::928>>

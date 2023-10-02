@@ -7,6 +7,10 @@ defmodule Bunny.Envelope.InitHello do
             pidiC: nil,
             auth: nil
 
+  @moduledoc """
+  Provides functions for dealing with `InitHello` payloads.
+  """
+
   @type sidi :: <<_::16>>
   @type epki :: <<_::6400>>
   @type sctr :: <<_::1504>>

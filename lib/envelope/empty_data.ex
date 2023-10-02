@@ -5,6 +5,10 @@ defmodule Bunny.Envelope.EmptyData do
             ctr: nil,
             auth: nil
 
+  @moduledoc """
+  Provides functions for dealing with `empty_data` payloads.
+  """
+
   @type sid :: <<_::32>>
   @type ctr :: <<_::64>>
   @type auth :: <<_::128>>

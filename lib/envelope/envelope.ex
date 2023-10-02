@@ -13,6 +13,10 @@ defmodule Bunny.Envelope do
             mac: nil,
             cookie: nil
 
+  @moduledoc """
+  Provides functions for dealing with envelopes.
+  """
+
   @type t :: %Envelope{
           type: type(),
           payload: payload(),

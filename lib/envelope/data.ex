@@ -5,6 +5,10 @@ defmodule Bunny.Envelope.Data do
             ctr: nil,
             data: nil
 
+  @moduledoc """
+  Provides functions for dealing with `Data` payloads.
+  """
+
   @type sid :: <<_::32>>
   @type ctr :: <<_::64>>
   @type data :: binary()
