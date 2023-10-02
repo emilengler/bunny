@@ -9,7 +9,7 @@ defmodule Bunny.Protocol.Initiator do
   alias Bunny.Crypto
 
   @type keys :: %{osk: Crypto.key(), txki: Crypto.key(), txkr: Crypto.key()}
-  @type psk :: <<_::256>>
+  @type psk :: Crypto.key()
   @type state :: any()
 
   @doc """
