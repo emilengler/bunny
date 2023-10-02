@@ -134,7 +134,7 @@ defmodule Bunny.Initiator do
 
   @spec recv(:socket.socket(), Envelope.type(), SKEM.public_key()) :: Envelope.payload()
   defp recv(socket, type, spkm) do
-    {:ok, data} = :socket.recv(socket)
+    {:ok, data} = :socket.recv(socket, [], 8000)
     envelope = Envelope.decode(data)
     ^type = envelope.type
     true = Envelope.verify(envelope, spkm)
