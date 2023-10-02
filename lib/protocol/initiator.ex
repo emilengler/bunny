@@ -1,12 +1,13 @@
 defmodule Bunny.Protocol.Initiator do
-  @moduledoc """
-  The Rosenpass protocol initiator.
-  """
   require Logger
   alias Bunny.Crypto.SKEM
   alias Bunny.Envelope
   alias Bunny.Crypto.EKEM
   alias Bunny.Crypto
+
+  @moduledoc """
+  The Rosenpass protocol initiator.
+  """
 
   @type keys :: %{osk: Crypto.key(), txki: Crypto.key(), txkr: Crypto.key()}
   @type psk :: Crypto.key()
