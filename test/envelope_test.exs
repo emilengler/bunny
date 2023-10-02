@@ -1,14 +1,15 @@
 defmodule BunnyTest.Envelope do
+  alias Bunny.Envelope
   use ExUnit.Case, async: true
   doctest Bunny
 
   test "decodes an envelope" do
     packet = <<0x85, 0, 0, 0, 42::32, 69::64, 0::256, 0::128, 0::128>>
-    envelope = Bunny.Envelope.decode(packet)
+    envelope = Envelope.decode(packet)
 
-    assert envelope == %Bunny.Envelope{
+    assert envelope == %Envelope{
              type: :data,
-             payload: %Bunny.Envelope.Data{
+             payload: %Envelope.Data{
                sid: <<42::32>>,
                ctr: <<69::64>>,
                data: <<0::256>>
@@ -19,9 +20,9 @@ defmodule BunnyTest.Envelope do
   end
 
   test "encodes an envelope" do
-    envelope = %Bunny.Envelope{
+    envelope = %Envelope{
       type: :data,
-      payload: %Bunny.Envelope.Data{
+      payload: %Envelope.Data{
         sid: <<42::32>>,
         ctr: <<69::64>>,
         data: <<0::256>>
@@ -30,7 +31,7 @@ defmodule BunnyTest.Envelope do
       cookie: <<0::128>>
     }
 
-    packet = Bunny.Envelope.encode(envelope)
+    packet = Envelope.encode(envelope)
     assert packet == <<0x85, 0, 0, 0, 42::32, 69::64, 0::256, 0::128, 0::128>>
   end
 end

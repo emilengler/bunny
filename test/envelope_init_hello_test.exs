@@ -1,4 +1,5 @@
 defmodule BunnyTest.Envelope.InitHello do
+  alias Bunny.Envelope.InitHello
   use ExUnit.Case, async: true
   doctest Bunny
 
@@ -7,9 +8,9 @@ defmodule BunnyTest.Envelope.InitHello do
       <<0::32, 0::integer-size(800)-unit(8), 0::integer-size(188)-unit(8),
         42::integer-size(48)-unit(8), 69::128>>
 
-    envelope = Bunny.Envelope.InitHello.decode(packet)
+    envelope = InitHello.decode(packet)
 
-    assert envelope == %Bunny.Envelope.InitHello{
+    assert envelope == %InitHello{
              sidi: <<0::32>>,
              epki: <<0::integer-size(800)-unit(8)>>,
              sctr: <<0::integer-size(188)-unit(8)>>,
@@ -19,7 +20,7 @@ defmodule BunnyTest.Envelope.InitHello do
   end
 
   test "encodes an envelope of type InitHello" do
-    envelope = %Bunny.Envelope.InitHello{
+    envelope = %InitHello{
       sidi: <<0::32>>,
       epki: <<0::integer-size(800)-unit(8)>>,
       sctr: <<0::integer-size(188)-unit(8)>>,
@@ -27,7 +28,7 @@ defmodule BunnyTest.Envelope.InitHello do
       auth: <<69::128>>
     }
 
-    packet = Bunny.Envelope.InitHello.encode(envelope)
+    packet = InitHello.encode(envelope)
 
     assert packet ==
              <<0::32, 0::integer-size(800)-unit(8), 0::integer-size(188)-unit(8),
