@@ -13,11 +13,8 @@ defmodule Bunny.Protocol.Initiator do
   @type psk :: Crypto.key()
   @type state :: any()
 
-  @doc """
-  Initializes the state with all keys.
-  """
   @spec init({SKEM.public_key(), SKEM.secret_key()}, SKEM.public_key(), psk()) :: state()
-  def init({spki, sski}, spkr, psk) do
+  defp init({spki, sski}, spkr, psk) do
     %{
       spki: spki,
       spkr: spkr,
@@ -26,11 +23,8 @@ defmodule Bunny.Protocol.Initiator do
     }
   end
 
-  @doc """
-  Performs the `InitHello` by updating the state and returning the appropriate payload.
-  """
   @spec init_hello(state()) :: {state(), Envelope.InitHello.t()}
-  def init_hello(state) do
+  defp init_hello(state) do
     # IHI1
     ck = Crypto.lhash("chaining key init") |> Crypto.hash(state.spkr)
 
@@ -76,11 +70,8 @@ defmodule Bunny.Protocol.Initiator do
     {state, payload}
   end
 
-  @doc """
-  Performs the `RespHello` by accepting an `RespHello` and returning the updated state.
-  """
   @spec resp_hello(state(), Envelope.RespHello.t()) :: state()
-  def resp_hello(state, rh) do
+  defp resp_hello(state, rh) do
     ck = state.ck
 
     # RHI3
@@ -103,11 +94,8 @@ defmodule Bunny.Protocol.Initiator do
     state |> Map.put(:ck, ck) |> Map.put(:biscuit, rh.biscuit) |> Map.put(:sidr, rh.sidr)
   end
 
-  @doc """
-  Performs the `InitConf` by updating the state and returning the appropriate payload.
-  """
   @spec init_conf(state()) :: {state(), Envelope.InitConf.t()}
-  def init_conf(state) do
+  defp init_conf(state) do
     ck = state.ck
 
     # ICI3
@@ -133,13 +121,8 @@ defmodule Bunny.Protocol.Initiator do
     {state, payload}
   end
 
-  @doc """
-  Finalizes the state by deriving all required keys from it.
-
-  Returns a map containing the `osk`, `txki`, and `txkr`.
-  """
   @spec final(state()) :: keys()
-  def final(state) do
+  defp final(state) do
     osk =
       state.ck |> Crypto.hash(Crypto.export_key("rosenpass.eu") |> Crypto.hash("wireguard psk"))
 
