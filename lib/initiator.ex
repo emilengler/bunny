@@ -131,4 +131,53 @@ defmodule Bunny.Initiator do
 
     %{osk: osk, txki: txki, txkr: txkr}
   end
+
+  @spec recv(:socket.socket(), Envelope.type(), SKEM.public_key()) :: Envelope.payload()
+  defp recv(socket, type, spkm) do
+    {:ok, data} = :socket.recv(socket)
+    envelope = Envelope.decode(data)
+    ^type = envelope.type
+    true = Envelope.verify(envelope, spkm)
+    envelope.payload
+  end
+
+  @spec send(:socket.socket(), Envelope.type(), Envelope.payload(), SKEM.public_key()) :: :ok
+  defp send(socket, type, payload, spkt) do
+    envelope = %Envelope{type: type, payload: payload, mac: <<0::128>>, cookie: <<0::128>>}
+    envelope = Envelope.seal(envelope, spkt)
+    :ok = :socket.send(socket, Envelope.encode(envelope))
+    :ok
+  end
+
+  @doc """
+  Initiates a Rosenpass handshake on an existing UDP `socket`.
+  """
+  @spec initiate(
+          :socket.socket(),
+          {SKEM.public_key(), SKEM.secret_key()},
+          SKEM.public_key(),
+          psk()
+        ) :: keys()
+  def initiate(socket, {spki, sski}, spkr, psk) do
+    state = init({spki, sski}, spkr, psk)
+
+    {state, payload} = init_hello(state)
+    :ok = send(socket, :init_hello, payload, spkr)
+    Logger.debug("Sent InitHello")
+
+    payload = recv(socket, :resp_hello, spki)
+    state = resp_hello(state, payload)
+    Logger.debug("Received RespHello")
+
+    {state, payload} = init_conf(state)
+    :ok = send(socket, :init_conf, payload, spkr)
+    Logger.debug("Sent InitConf")
+
+    _ = recv(socket, :empty_data, spki)
+    Logger.debug("Received EmptyData")
+
+    Logger.notice("Finished handshake")
+
+    final(state)
+  end
 end
