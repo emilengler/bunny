@@ -119,6 +119,8 @@ defmodule Bunny.Protocol.Initiator do
       auth: auth
     }
 
+    Logger.info("Generated InitConf")
+
     state = %{ck: ck}
 
     {state, payload}
