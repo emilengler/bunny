@@ -36,7 +36,7 @@ defmodule BunnyTest.Envelope do
   end
 
   test "seals and verifies an envelope (random key)" do
-    pk = :crypto.strong_rand_bytes(512_000)
+    pk = :enacl.randombytes(512_000)
 
     envelope = %Envelope{
       type: :data,

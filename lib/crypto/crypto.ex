@@ -28,7 +28,7 @@ defmodule Bunny.Crypto do
     ikey = :crypto.exor(key, ipad)
     okey = :crypto.exor(key, opad)
 
-    Blake2.hash2b(data, 32, ikey) |> Blake2.hash2b(32, okey)
+    :enacl.generichash(32, :enacl.generichash(32, data, ikey), okey)
   end
 
   @doc """
@@ -123,6 +123,6 @@ defmodule Bunny.Crypto do
   """
   @spec random_session_id() :: session_id()
   def random_session_id() do
-    :crypto.strong_rand_bytes(4)
+    :enacl.randombytes(4)
   end
 end
