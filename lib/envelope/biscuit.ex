@@ -13,7 +13,7 @@ defmodule Bunny.Envelope.Biscuit do
   @type biscuit_no :: <<_::96>>
   @type chaining_key :: <<_::256>>
 
-  @type packet :: <<_::928>>
+  @type packet :: <<_::608>>
 
   @type t :: %Biscuit{
           pidi: pidi(),
