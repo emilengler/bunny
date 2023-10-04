@@ -1,4 +1,4 @@
-defmodule BunnyTest.Envelope.Data do
+defmodule Bunny.Envelope.DataTest do
   alias Bunny.Envelope.Data
   use ExUnit.Case, async: true
   doctest Data

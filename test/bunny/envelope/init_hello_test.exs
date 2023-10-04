@@ -1,4 +1,4 @@
-defmodule BunnyTest.Envelope.InitHello do
+defmodule Bunny.Envelope.InitHelloTest do
   alias Bunny.Envelope.InitHello
   use ExUnit.Case, async: true
   doctest InitHello
