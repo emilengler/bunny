@@ -8,7 +8,7 @@ defmodule Bunny.Crypto do
   """
 
   @type chaining_key :: key()
-  @type hash :: <<_::128>>
+  @type hash :: <<_::256>>
   @type kem :: :ekem | :skem
   @type kem_ct :: EKEM.cipher_text() | SKEM.cipher_text()
   @type kem_pk :: EKEM.public_key() | SKEM.public_key()
