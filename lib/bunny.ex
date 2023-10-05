@@ -1,18 +1,5 @@
 defmodule Bunny do
   @moduledoc """
-  Documentation for `Bunny`.
+  Rosenpass but even cuter.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Bunny.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 end
