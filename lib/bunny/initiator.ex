@@ -14,9 +14,6 @@ defmodule Bunny.Initiator do
   The Rosenpass protocol initiator.
   """
 
-  # TODO: Consider enforcing that a GenServer, once initialized, can only be used
-  #       with one specific peer that was provided during the initialization.
-
   # TODO: Implement some sort of hiberation.
 
   @type hs_state :: any()
@@ -136,13 +133,13 @@ defmodule Bunny.Initiator do
   end
 
   @impl true
-  def init(_init_arg) do
-    {:ok, nil}
+  def init(init_arg) do
+    {:ok, init_arg}
   end
 
   @impl true
-  def handle_cast({:handshake, spki, sski, peer}, _hs_state) do
-    {host, port} = peer.endpoint
+  def handle_cast(:handshake, state) do
+    {host, port} = state.peer.endpoint
 
     {domain, addr} =
       try do
@@ -157,38 +154,38 @@ defmodule Bunny.Initiator do
     {:ok, socket} = :socket.open(domain, :dgram, :default)
     :ok = :socket.connect(socket, %{family: domain, addr: addr, port: port})
 
-    hs_state = init(spki, sski, peer.spkt, peer.psk)
+    hs_state = init(state.spki, state.sski, state.peer.spkt, state.peer.psk)
 
     {hs_state, ih} = init_hello(hs_state)
-    :ok = send(socket, :init_hello, ih, peer.spkt)
+    :ok = send(socket, :init_hello, ih, state.peer.spkt)
     Logger.debug("Sent InitHello")
 
-    rh = recv(socket, :resp_hello, spki)
+    rh = recv(socket, :resp_hello, state.spki)
     hs_state = resp_hello(hs_state, rh)
     Logger.debug("Received RespHello")
 
     {hs_state, ic} = init_conf(hs_state)
-    :ok = send(socket, :init_conf, ic, peer.spkt)
+    :ok = send(socket, :init_conf, ic, state.peer.spkt)
     Logger.debug("Sent InitConf")
 
-    _ = recv(socket, :empty_data, spki)
+    _ = recv(socket, :empty_data, state.spki)
     Logger.debug("Received EmptyData")
     :socket.close(socket)
 
     osk = final(hs_state)
-    File.write!(peer.output, Base.encode64(osk))
+    File.write!(state.peer.output, Base.encode64(osk))
 
     Logger.info("Finished handshake")
 
-    {:noreply, nil}
+    {:noreply, state}
   end
 
   @doc """
   Starts an initiator server.
   """
-  @spec start() :: {:error, any()} | {:ok, pid()}
-  def start() do
-    GenServer.start(__MODULE__, nil)
+  @spec start(SKEM.public_key(), SKEM.secret_key(), Peer.t()) :: {:error, any()} | {:ok, pid()}
+  def start(spki, sski, peer) do
+    GenServer.start(__MODULE__, %{spki: spki, sski: sski, peer: peer})
   end
 
   @doc """
@@ -196,8 +193,8 @@ defmodule Bunny.Initiator do
 
   The resulting shared secret will be written to the appropriate file, once finished
   """
-  @spec handshake(pid(), SKEM.public_key(), SKEM.secret_key(), Peer.t()) :: :ok
-  def handshake(server, spki, sski, peer) do
-    GenServer.cast(server, {:handshake, spki, sski, peer})
+  @spec handshake(pid()) :: :ok
+  def handshake(server) do
+    GenServer.cast(server, :handshake)
   end
 end
