@@ -115,20 +115,21 @@ defmodule Bunny.Initiator do
     hs_state.ck |> Crypto.hash(Crypto.export_key("rosenpass.eu") |> Crypto.hash("wireguard psk"))
   end
 
-  @spec recv(:socket.socket(), Envelope.type(), SKEM.public_key()) :: Envelope.payload()
+  @spec recv(:gen_udp.socket(), Envelope.type(), SKEM.public_key()) :: Envelope.payload()
   defp recv(socket, type, spkm) do
-    {:ok, data} = :socket.recv(socket, [], 8000)
+    {:ok, {_, _, data}} = :gen_udp.recv(socket, 0, 8000)
+    data = :binary.list_to_bin(data)
     envelope = Envelope.decode(data)
     ^type = envelope.type
     true = Envelope.verify(envelope, spkm)
     envelope.payload
   end
 
-  @spec send(:socket.socket(), Envelope.type(), Envelope.payload(), SKEM.public_key()) :: :ok
+  @spec send(:gen_udp.socket(), Envelope.type(), Envelope.payload(), SKEM.public_key()) :: :ok
   defp send(socket, type, payload, spkt) do
     envelope = %Envelope{type: type, payload: payload, mac: <<0::128>>}
     envelope = Envelope.seal(envelope, spkt)
-    :ok = :socket.send(socket, Envelope.encode(envelope))
+    :ok = :gen_udp.send(socket, Envelope.encode(envelope))
     :ok
   end
 
@@ -141,18 +142,19 @@ defmodule Bunny.Initiator do
   def handle_cast(:handshake, state) do
     {host, port} = state.peer.endpoint
 
-    {domain, addr} =
+    {addr, family} =
       try do
         {:ok, addr} = :inet.getaddr(host, :inet6)
-        {:inet6, addr}
+        {addr, :inet6}
       rescue
         MatchError ->
           {:ok, addr} = :inet.getaddr(host, :inet)
-          {:inet, addr}
+          {addr, :inet}
       end
 
-    {:ok, socket} = :socket.open(domain, :dgram, :default)
-    :ok = :socket.connect(socket, %{family: domain, addr: addr, port: port})
+    {:ok, socket} = :gen_udp.open(0, [{:ip, addr}])
+    :ok = :inet.setopts(socket, [{:active, false}])
+    :ok = :gen_udp.connect(socket, %{family: family, addr: addr, port: port})
 
     hs_state = init(state.spki, state.sski, state.peer.spkt, state.peer.psk)
 
@@ -170,7 +172,7 @@ defmodule Bunny.Initiator do
 
     _ = recv(socket, :empty_data, state.spki)
     Logger.debug("Received EmptyData")
-    :socket.close(socket)
+    :gen_udp.close(socket)
 
     osk = final(hs_state)
     File.write!(state.peer.output, Base.encode64(osk))
