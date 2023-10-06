@@ -11,7 +11,7 @@ defmodule Bunny.Envelope.InitHello do
   Provides functions for dealing with `InitHello` payloads.
   """
 
-  @type sidi :: <<_::16>>
+  @type sidi :: <<_::32>>
   @type epki :: <<_::6400>>
   @type sctr :: <<_::1504>>
   @type pidiC :: <<_::384>>
