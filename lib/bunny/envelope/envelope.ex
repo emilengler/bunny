@@ -70,7 +70,7 @@ defmodule Bunny.Envelope do
   def decode(packet) do
     <<type, _::binary-size(3), packet::binary>> = packet
     n = byte_size(packet) - 32
-    <<payload::binary-size(n), mac::binary-size(16), 0::128>> = packet
+    <<payload::binary-size(n), mac::binary-size(16), _cookie::binary-size(16)>> = packet
 
     type = decode_type(type)
     payload = decode_payload(type, payload)
