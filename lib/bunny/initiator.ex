@@ -21,8 +21,8 @@ defmodule Bunny.Initiator do
 
   @type state :: any()
 
-  @spec init({SKEM.public_key(), SKEM.secret_key()}, SKEM.public_key(), Crypto.key()) :: state()
-  defp init({spki, sski}, spkr, psk) do
+  @spec init(SKEM.public_key(), SKEM.secret_key(), SKEM.public_key(), Crypto.key()) :: state()
+  defp init(spki, sski, spkr, psk) do
     %{spki: spki, spkr: spkr, sski: sski, psk: psk}
   end
 
@@ -128,7 +128,7 @@ defmodule Bunny.Initiator do
   end
 
   @impl true
-  def handle_cast({:handshake, {spki, sski}, peer}, _state) do
+  def handle_cast({:handshake, spki, sski, peer}, _state) do
     {host, port} = peer.endpoint
 
     {domain, addr} =
@@ -144,7 +144,7 @@ defmodule Bunny.Initiator do
     {:ok, socket} = :socket.open(domain, :dgram, :default)
     :ok = :socket.connect(socket, %{family: domain, addr: addr, port: port})
 
-    state = init({spki, sski}, peer.spkt, peer.psk)
+    state = init(spki, sski, peer.spkt, peer.psk)
 
     {state, ih} = init_hello(state)
     :ok = send(socket, :init_hello, ih, peer.spkt)
@@ -183,8 +183,8 @@ defmodule Bunny.Initiator do
 
   The resulting shared secret will be written to the appropriate file, once finished
   """
-  @spec handshake(pid(), {SKEM.public_key(), SKEM.secret_key()}, Peer.t()) :: :ok
-  def handshake(server, {spki, sski}, peer) do
-    GenServer.cast(server, {:handshake, {spki, sski}, peer})
+  @spec handshake(pid(), SKEM.public_key(), SKEM.secret_key(), Peer.t()) :: :ok
+  def handshake(server, spki, sski, peer) do
+    GenServer.cast(server, {:handshake, spki, sski, peer})
   end
 end
