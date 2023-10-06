@@ -23,10 +23,7 @@ defmodule Bunny.Envelope.Biscuit do
 
   @spec decode(packet()) :: t()
   def decode(packet) do
-    remaining = packet
-    <<pidi::binary-size(32), remaining::binary>> = remaining
-    <<biscuit_no::binary-size(12), remaining::binary>> = remaining
-    <<ck::binary-size(32), _::binary>> = remaining
+    <<pidi::binary-size(32), biscuit_no::binary-size(12), ck::binary-size(32)>> = packet
 
     %Biscuit{
       pidi: pidi,

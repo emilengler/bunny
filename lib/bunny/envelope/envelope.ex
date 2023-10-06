@@ -68,14 +68,9 @@ defmodule Bunny.Envelope do
 
   @spec decode(binary()) :: t()
   def decode(packet) do
-    remaining = packet
-    <<type, remaining::binary>> = remaining
-    <<_::binary-size(3), remaining::binary>> = remaining
-    n = byte_size(remaining) - 16 - 16
-    <<payload::binary-size(n), remaining::binary>> = remaining
-    <<mac::binary-size(16), remaining::binary>> = remaining
-    <<cookie::binary-size(16), remaining::binary>> = remaining
-    true = byte_size(remaining) == 0
+    <<type, _::binary-size(3), packet::binary>> = packet
+    n = byte_size(packet) - 32
+    <<payload::binary-size(n), mac::binary-size(16), 0::128>> = packet
 
     type = decode_type(type)
     payload = decode_payload(type, payload)
@@ -84,7 +79,7 @@ defmodule Bunny.Envelope do
       type: type,
       payload: payload,
       mac: mac,
-      cookie: cookie
+      cookie: <<0::128>>
     }
   end
 
@@ -101,8 +96,7 @@ defmodule Bunny.Envelope do
         :data -> Data.encode(payload.payload)
       end
 
-    encoded = type <> <<0, 0, 0>> <> payload_enc <> payload.mac <> payload.cookie
-    encoded
+    type <> <<0, 0, 0>> <> payload_enc <> payload.mac <> payload.cookie
   end
 
   @doc """

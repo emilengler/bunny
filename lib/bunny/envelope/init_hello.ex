@@ -29,12 +29,8 @@ defmodule Bunny.Envelope.InitHello do
 
   @spec decode(packet()) :: t()
   def decode(packet) do
-    remaining = packet
-    <<sidi::binary-size(4), remaining::binary>> = remaining
-    <<epki::binary-size(800), remaining::binary>> = remaining
-    <<sctr::binary-size(188), remaining::binary>> = remaining
-    <<pidiC::binary-size(48), remaining::binary>> = remaining
-    <<auth::binary-size(16), _::binary>> = remaining
+    <<sidi::binary-size(4), epki::binary-size(800), sctr::binary-size(188),
+      pidiC::binary-size(48), auth::binary-size(16)>> = packet
 
     %InitHello{
       sidi: sidi,

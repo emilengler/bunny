@@ -32,13 +32,8 @@ defmodule Bunny.Envelope.RespHello do
 
   @spec decode(packet()) :: t()
   def decode(packet) do
-    remaining = packet
-    <<sidr::binary-size(4), remaining::binary>> = remaining
-    <<sidi::binary-size(4), remaining::binary>> = remaining
-    <<ecti::binary-size(768), remaining::binary>> = remaining
-    <<scti::binary-size(188), remaining::binary>> = remaining
-    <<auth::binary-size(16), remaining::binary>> = remaining
-    <<biscuit::binary-size(116), _::binary>> = remaining
+    <<sidr::binary-size(4), sidi::binary-size(4), ecti::binary-size(768), scti::binary-size(188),
+      auth::binary-size(16), biscuit::binary-size(116)>> = packet
 
     %RespHello{
       sidr: sidr,

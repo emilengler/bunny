@@ -23,10 +23,7 @@ defmodule Bunny.Envelope.EmptyData do
 
   @spec decode(packet()) :: t()
   def decode(packet) do
-    remaining = packet
-    <<sid::binary-size(4), remaining::binary>> = remaining
-    <<ctr::binary-size(8), remaining::binary>> = remaining
-    <<auth::binary-size(16), _::binary>> = remaining
+    <<sid::binary-size(4), ctr::binary-size(8), auth::binary-size(16)>> = packet
 
     %EmptyData{
       sid: sid,

@@ -26,11 +26,8 @@ defmodule Bunny.Envelope.InitConf do
 
   @spec decode(packet()) :: t()
   def decode(packet) do
-    remaining = packet
-    <<sidi::binary-size(4), remaining::binary>> = remaining
-    <<sidr::binary-size(4), remaining::binary>> = remaining
-    <<biscuit::binary-size(116), remaining::binary>> = remaining
-    <<auth::binary-size(16), _::binary>> = remaining
+    <<sidi::binary-size(4), sidr::binary-size(4), biscuit::binary-size(116),
+      auth::binary-size(16)>> = packet
 
     %InitConf{
       sidi: sidi,
