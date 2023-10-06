@@ -116,7 +116,7 @@ defmodule Bunny.Initiator do
 
   @spec send(:socket.socket(), Envelope.type(), Envelope.payload(), SKEM.public_key()) :: :ok
   defp send(socket, type, payload, spkt) do
-    envelope = %Envelope{type: type, payload: payload, mac: <<0::128>>, cookie: <<0::128>>}
+    envelope = %Envelope{type: type, payload: payload, mac: <<0::128>>}
     envelope = Envelope.seal(envelope, spkt)
     :ok = :socket.send(socket, Envelope.encode(envelope))
     :ok

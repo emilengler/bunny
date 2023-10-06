@@ -14,8 +14,7 @@ defmodule Bunny.EnvelopeTest do
                ctr: <<69::64>>,
                data: <<0::256>>
              },
-             mac: <<0::128>>,
-             cookie: <<0::128>>
+             mac: <<0::128>>
            }
   end
 
@@ -27,8 +26,7 @@ defmodule Bunny.EnvelopeTest do
         ctr: <<69::64>>,
         data: <<0::256>>
       },
-      mac: <<0::128>>,
-      cookie: <<0::128>>
+      mac: <<0::128>>
     }
 
     packet = Envelope.encode(envelope)
@@ -45,8 +43,7 @@ defmodule Bunny.EnvelopeTest do
         ctr: <<69::64>>,
         data: <<0::256>>
       },
-      mac: <<0::128>>,
-      cookie: <<0::128>>
+      mac: <<0::128>>
     }
 
     envelope_sealed = Envelope.seal(envelope, pk)
@@ -64,8 +61,7 @@ defmodule Bunny.EnvelopeTest do
         ctr: <<69::64>>,
         data: <<0::256>>
       },
-      mac: <<0::128>>,
-      cookie: <<0::128>>
+      mac: <<0::128>>
     }
 
     envelope_sealed = Envelope.seal(envelope, pk)

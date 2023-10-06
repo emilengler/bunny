@@ -10,8 +10,7 @@ defmodule Bunny.Envelope do
 
   defstruct type: nil,
             payload: nil,
-            mac: nil,
-            cookie: nil
+            mac: nil
 
   @moduledoc """
   Provides functions for dealing with envelopes.
@@ -20,8 +19,7 @@ defmodule Bunny.Envelope do
   @type t :: %Envelope{
           type: type(),
           payload: payload(),
-          mac: mac(),
-          cookie: cookie()
+          mac: mac()
         }
 
   @type type :: :init_hello | :resp_hello | :init_conf | :empty_data | :data
@@ -32,7 +30,6 @@ defmodule Bunny.Envelope do
           | EmptyData.t()
           | Data.t()
   @type mac :: <<_::128>>
-  @type cookie :: <<_::128>>
 
   @spec decode_type(integer()) :: type()
   defp decode_type(type) do
@@ -78,8 +75,7 @@ defmodule Bunny.Envelope do
     %Envelope{
       type: type,
       payload: payload,
-      mac: mac,
-      cookie: <<0::128>>
+      mac: mac
     }
   end
 
@@ -96,7 +92,7 @@ defmodule Bunny.Envelope do
         :data -> Data.encode(payload.payload)
       end
 
-    type <> <<0, 0, 0>> <> payload_enc <> payload.mac <> payload.cookie
+    type <> <<0, 0, 0>> <> payload_enc <> payload.mac <> <<0::128>>
   end
 
   @doc """
