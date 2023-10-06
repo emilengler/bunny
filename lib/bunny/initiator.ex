@@ -1,29 +1,32 @@
 defmodule Bunny.Initiator do
   require Logger
-  alias Bunny.Crypto.SKEM
+  alias Bunny.Envelope.RespHello
+  alias Bunny.Config.Peer
   alias Bunny.Envelope
+  alias Bunny.Crypto.SKEM
+  alias Bunny.Envelope.InitConf
+  alias Bunny.Envelope.InitHello
   alias Bunny.Crypto.EKEM
   alias Bunny.Crypto
+  use GenServer
 
   @moduledoc """
   The Rosenpass protocol initiator.
   """
 
-  @type keys :: %{osk: Crypto.key(), txki: Crypto.key(), txkr: Crypto.key()}
-  @type psk :: Crypto.key()
+  # TODO: Consider enforcing that a GenServer, once initialized, can only be used
+  #       with one specific peer that was provided during the initialization.
+
+  # TODO: Implement some sort of hiberation.
+
   @type state :: any()
 
-  @spec init({SKEM.public_key(), SKEM.secret_key()}, SKEM.public_key(), psk()) :: state()
+  @spec init({SKEM.public_key(), SKEM.secret_key()}, SKEM.public_key(), Crypto.key()) :: state()
   defp init({spki, sski}, spkr, psk) do
-    %{
-      spki: spki,
-      spkr: spkr,
-      sski: sski,
-      psk: psk
-    }
+    %{spki: spki, spkr: spkr, sski: sski, psk: psk}
   end
 
-  @spec init_hello(state()) :: {state(), Envelope.InitHello.t()}
+  @spec init_hello(state()) :: {state(), InitHello.t()}
   defp init_hello(state) do
     # IHI1
     ck = Crypto.lhash("chaining key init") |> Crypto.hash(state.spkr)
@@ -50,27 +53,13 @@ defmodule Bunny.Initiator do
     # IHI8
     {ck, auth} = Crypto.encrypt_and_mix(ck, <<>>)
 
-    payload = %Envelope.InitHello{
-      sidi: sidi,
-      epki: epki,
-      sctr: sctr,
-      pidiC: pidiC,
-      auth: auth
-    }
+    ih = %InitHello{sidi: sidi, epki: epki, sctr: sctr, pidiC: pidiC, auth: auth}
 
-    Logger.info("Generated InitHello")
-
-    state =
-      state
-      |> Map.put(:ck, ck)
-      |> Map.put(:epki, epki)
-      |> Map.put(:eski, eski)
-      |> Map.put(:sidi, sidi)
-
-    {state, payload}
+    state = %{ck: ck, spki: state.spki, sski: state.sski, epki: epki, eski: eski, sidi: sidi}
+    {state, ih}
   end
 
-  @spec resp_hello(state(), Envelope.RespHello.t()) :: state()
+  @spec resp_hello(state(), RespHello.t()) :: state()
   defp resp_hello(state, rh) do
     ck = state.ck
 
@@ -89,12 +78,10 @@ defmodule Bunny.Initiator do
     # RHI7
     {ck, _} = Crypto.decrypt_and_mix(ck, rh.auth)
 
-    Logger.info("Handled RespHello")
-
-    state |> Map.put(:ck, ck) |> Map.put(:biscuit, rh.biscuit) |> Map.put(:sidr, rh.sidr)
+    %{biscuit: rh.biscuit, ck: ck, sidi: state.sidi, sidr: rh.sidr}
   end
 
-  @spec init_conf(state()) :: {state(), Envelope.InitConf.t()}
+  @spec init_conf(state()) :: {state(), InitConf.t()}
   defp init_conf(state) do
     ck = state.ck
 
@@ -107,29 +94,15 @@ defmodule Bunny.Initiator do
     # ICI7
     # TODO
 
-    payload = %Envelope.InitConf{
-      sidi: state.sidi,
-      sidr: state.sidr,
-      biscuit: state.biscuit,
-      auth: auth
-    }
-
-    Logger.info("Generated InitConf")
+    ic = %InitConf{sidi: state.sidi, sidr: state.sidr, biscuit: state.biscuit, auth: auth}
 
     state = %{ck: ck}
-
-    {state, payload}
+    {state, ic}
   end
 
-  @spec final(state()) :: keys()
+  @spec final(state()) :: Crypto.key()
   defp final(state) do
-    osk =
-      state.ck |> Crypto.hash(Crypto.export_key("rosenpass.eu") |> Crypto.hash("wireguard psk"))
-
-    txki = state.ck |> Crypto.hash(Crypto.extract_key("initiator payload encryption"))
-    txkr = state.ck |> Crypto.hash(Crypto.extract_key("responder payload encryption"))
-
-    %{osk: osk, txki: txki, txkr: txkr}
+    state.ck |> Crypto.hash(Crypto.export_key("rosenpass.eu") |> Crypto.hash("wireguard psk"))
   end
 
   @spec recv(:socket.socket(), Envelope.type(), SKEM.public_key()) :: Envelope.payload()
@@ -149,35 +122,69 @@ defmodule Bunny.Initiator do
     :ok
   end
 
-  @doc """
-  Initiates a Rosenpass handshake on an existing UDP `socket`.
-  """
-  @spec initiate(
-          :socket.socket(),
-          {SKEM.public_key(), SKEM.secret_key()},
-          SKEM.public_key(),
-          psk()
-        ) :: keys()
-  def initiate(socket, {spki, sski}, spkr, psk) do
-    state = init({spki, sski}, spkr, psk)
+  @impl true
+  def init(_init_arg) do
+    {:ok, nil}
+  end
 
-    {state, payload} = init_hello(state)
-    :ok = send(socket, :init_hello, payload, spkr)
+  @impl true
+  def handle_cast({:handshake, {spki, sski}, peer}, _state) do
+    {host, port} = peer.endpoint
+
+    {domain, addr} =
+      try do
+        {:ok, addr} = :inet.getaddr(host, :inet6)
+        {:inet6, addr}
+      rescue
+        MatchError ->
+          {:ok, addr} = :inet.getaddr(host, :inet)
+          {:inet, addr}
+      end
+
+    {:ok, socket} = :socket.open(domain, :dgram, :default)
+    :ok = :socket.connect(socket, %{family: domain, addr: addr, port: port})
+
+    state = init({spki, sski}, peer.spkt, peer.psk)
+
+    {state, ih} = init_hello(state)
+    :ok = send(socket, :init_hello, ih, peer.spkt)
     Logger.debug("Sent InitHello")
 
-    payload = recv(socket, :resp_hello, spki)
-    state = resp_hello(state, payload)
+    rh = recv(socket, :resp_hello, spki)
+    state = resp_hello(state, rh)
     Logger.debug("Received RespHello")
 
-    {state, payload} = init_conf(state)
-    :ok = send(socket, :init_conf, payload, spkr)
+    {state, ic} = init_conf(state)
+    :ok = send(socket, :init_conf, ic, peer.spkt)
     Logger.debug("Sent InitConf")
 
     _ = recv(socket, :empty_data, spki)
     Logger.debug("Received EmptyData")
+    :socket.close(socket)
 
-    Logger.notice("Finished handshake")
+    osk = final(state)
+    File.write!(peer.output, Base.encode64(osk))
 
-    final(state)
+    Logger.info("Finished handshake")
+
+    {:noreply, nil}
+  end
+
+  @doc """
+  Starts an initiator server.
+  """
+  @spec start() :: {:error, any()} | {:ok, pid()}
+  def start() do
+    GenServer.start(__MODULE__, nil)
+  end
+
+  @doc """
+  Initiates an asynchronous handshake with peer.
+
+  The resulting shared secret will be written to the appropriate file, once finished
+  """
+  @spec handshake(pid(), {SKEM.public_key(), SKEM.secret_key()}, Peer.t()) :: :ok
+  def handshake(server, {spki, sski}, peer) do
+    GenServer.cast(server, {:handshake, {spki, sski}, peer})
   end
 end
