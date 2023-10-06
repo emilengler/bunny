@@ -19,17 +19,17 @@ defmodule Bunny.Initiator do
 
   # TODO: Implement some sort of hiberation.
 
-  @type state :: any()
+  @type hs_state :: any()
 
-  @spec init(SKEM.public_key(), SKEM.secret_key(), SKEM.public_key(), Crypto.key()) :: state()
+  @spec init(SKEM.public_key(), SKEM.secret_key(), SKEM.public_key(), Crypto.key()) :: hs_state()
   defp init(spki, sski, spkr, psk) do
     %{spki: spki, spkr: spkr, sski: sski, psk: psk}
   end
 
-  @spec init_hello(state()) :: {state(), InitHello.t()}
-  defp init_hello(state) do
+  @spec init_hello(hs_state()) :: {hs_state(), InitHello.t()}
+  defp init_hello(hs_state) do
     # IHI1
-    ck = Crypto.lhash("chaining key init") |> Crypto.hash(state.spkr)
+    ck = Crypto.lhash("chaining key init") |> Crypto.hash(hs_state.spkr)
 
     # IHI2
     sidi = Crypto.random_session_id()
@@ -41,36 +41,44 @@ defmodule Bunny.Initiator do
     ck = ck |> Crypto.mix(sidi) |> Crypto.mix(epki)
 
     # IHI5
-    {ck, sctr} = Crypto.encaps_and_mix(:skem, ck, state.spkr)
+    {ck, sctr} = Crypto.encaps_and_mix(:skem, ck, hs_state.spkr)
 
     # IHI6
-    pidi = Crypto.hash(Crypto.lhash("peer id"), state.spki)
+    pidi = Crypto.hash(Crypto.lhash("peer id"), hs_state.spki)
     {ck, pidiC} = Crypto.encrypt_and_mix(ck, pidi)
 
     # IHI7
-    ck = ck |> Crypto.mix(state.spki) |> Crypto.mix(state.psk)
+    ck = ck |> Crypto.mix(hs_state.spki) |> Crypto.mix(hs_state.psk)
 
     # IHI8
     {ck, auth} = Crypto.encrypt_and_mix(ck, <<>>)
 
     ih = %InitHello{sidi: sidi, epki: epki, sctr: sctr, pidiC: pidiC, auth: auth}
 
-    state = %{ck: ck, spki: state.spki, sski: state.sski, epki: epki, eski: eski, sidi: sidi}
-    {state, ih}
+    hs_state = %{
+      ck: ck,
+      spki: hs_state.spki,
+      sski: hs_state.sski,
+      epki: epki,
+      eski: eski,
+      sidi: sidi
+    }
+
+    {hs_state, ih}
   end
 
-  @spec resp_hello(state(), RespHello.t()) :: state()
-  defp resp_hello(state, rh) do
-    ck = state.ck
+  @spec resp_hello(hs_state(), RespHello.t()) :: hs_state()
+  defp resp_hello(hs_state, rh) do
+    ck = hs_state.ck
 
     # RHI3
-    ck = ck |> Crypto.mix(rh.sidr) |> Crypto.mix(state.sidi)
+    ck = ck |> Crypto.mix(rh.sidr) |> Crypto.mix(hs_state.sidi)
 
     # RHI4
-    ck = Crypto.decaps_and_mix(:ekem, ck, state.eski, state.epki, rh.ecti)
+    ck = Crypto.decaps_and_mix(:ekem, ck, hs_state.eski, hs_state.epki, rh.ecti)
 
     # RHI5
-    ck = Crypto.decaps_and_mix(:skem, ck, state.sski, state.spki, rh.scti)
+    ck = Crypto.decaps_and_mix(:skem, ck, hs_state.sski, hs_state.spki, rh.scti)
 
     # RHI6
     ck = ck |> Crypto.mix(rh.biscuit)
@@ -78,15 +86,15 @@ defmodule Bunny.Initiator do
     # RHI7
     {ck, _} = Crypto.decrypt_and_mix(ck, rh.auth)
 
-    %{biscuit: rh.biscuit, ck: ck, sidi: state.sidi, sidr: rh.sidr}
+    %{biscuit: rh.biscuit, ck: ck, sidi: hs_state.sidi, sidr: rh.sidr}
   end
 
-  @spec init_conf(state()) :: {state(), InitConf.t()}
-  defp init_conf(state) do
-    ck = state.ck
+  @spec init_conf(hs_state()) :: {hs_state(), InitConf.t()}
+  defp init_conf(hs_state) do
+    ck = hs_state.ck
 
     # ICI3
-    ck = ck |> Crypto.mix(state.sidi) |> Crypto.mix(state.sidr)
+    ck = ck |> Crypto.mix(hs_state.sidi) |> Crypto.mix(hs_state.sidr)
 
     # ICI4
     {ck, auth} = Crypto.encrypt_and_mix(ck, <<>>)
@@ -94,15 +102,20 @@ defmodule Bunny.Initiator do
     # ICI7
     # TODO
 
-    ic = %InitConf{sidi: state.sidi, sidr: state.sidr, biscuit: state.biscuit, auth: auth}
+    ic = %InitConf{
+      sidi: hs_state.sidi,
+      sidr: hs_state.sidr,
+      biscuit: hs_state.biscuit,
+      auth: auth
+    }
 
-    state = %{ck: ck}
-    {state, ic}
+    hs_state = %{ck: ck}
+    {hs_state, ic}
   end
 
-  @spec final(state()) :: Crypto.key()
-  defp final(state) do
-    state.ck |> Crypto.hash(Crypto.export_key("rosenpass.eu") |> Crypto.hash("wireguard psk"))
+  @spec final(hs_state()) :: Crypto.key()
+  defp final(hs_state) do
+    hs_state.ck |> Crypto.hash(Crypto.export_key("rosenpass.eu") |> Crypto.hash("wireguard psk"))
   end
 
   @spec recv(:socket.socket(), Envelope.type(), SKEM.public_key()) :: Envelope.payload()
@@ -128,7 +141,7 @@ defmodule Bunny.Initiator do
   end
 
   @impl true
-  def handle_cast({:handshake, spki, sski, peer}, _state) do
+  def handle_cast({:handshake, spki, sski, peer}, _hs_state) do
     {host, port} = peer.endpoint
 
     {domain, addr} =
@@ -144,17 +157,17 @@ defmodule Bunny.Initiator do
     {:ok, socket} = :socket.open(domain, :dgram, :default)
     :ok = :socket.connect(socket, %{family: domain, addr: addr, port: port})
 
-    state = init(spki, sski, peer.spkt, peer.psk)
+    hs_state = init(spki, sski, peer.spkt, peer.psk)
 
-    {state, ih} = init_hello(state)
+    {hs_state, ih} = init_hello(hs_state)
     :ok = send(socket, :init_hello, ih, peer.spkt)
     Logger.debug("Sent InitHello")
 
     rh = recv(socket, :resp_hello, spki)
-    state = resp_hello(state, rh)
+    hs_state = resp_hello(hs_state, rh)
     Logger.debug("Received RespHello")
 
-    {state, ic} = init_conf(state)
+    {hs_state, ic} = init_conf(hs_state)
     :ok = send(socket, :init_conf, ic, peer.spkt)
     Logger.debug("Sent InitConf")
 
@@ -162,7 +175,7 @@ defmodule Bunny.Initiator do
     Logger.debug("Received EmptyData")
     :socket.close(socket)
 
-    osk = final(state)
+    osk = final(hs_state)
     File.write!(peer.output, Base.encode64(osk))
 
     Logger.info("Finished handshake")
