@@ -16,6 +16,6 @@ defmodule Bunny.Config.Peer do
           spkt: SKEM.public_key(),
           endpoint: Config.addrport() | nil,
           psk: Crypto.key(),
-          output: File.io_device()
+          output: Path.t()
         }
 end
