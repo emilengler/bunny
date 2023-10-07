@@ -58,6 +58,7 @@ defmodule Bunny.Envelope do
     case type do
       :init_hello -> InitHello.decode(packet)
       :resp_hello -> RespHello.decode(packet)
+      :init_conf -> InitConf.decode(packet)
       :empty_data -> EmptyData.decode(packet)
       :data -> Data.decode(packet)
     end
