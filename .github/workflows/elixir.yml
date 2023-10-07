@@ -38,4 +38,4 @@ jobs:
     - name: Install Mix dependencies
       run: mix deps.get
     - name: Run tests
-      run: mix test
+      run: ./contrib/test.sh 
