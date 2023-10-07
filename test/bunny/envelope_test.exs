@@ -2,6 +2,7 @@ defmodule Bunny.EnvelopeTest do
   alias Bunny.Envelope.Data
   alias Bunny.Envelope.EmptyData
   alias Bunny.Envelope.RespHello
+  alias Bunny.Envelope.InitConf
   alias Bunny.Envelope.InitHello
   alias Bunny.Envelope
   use ExUnit.Case, async: true
@@ -91,6 +92,41 @@ defmodule Bunny.EnvelopeTest do
              <<0x82, 0, 0, 0>> <>
                <<42::32, 69::32, 0::integer-size(768)-unit(8), 0::integer-size(188)-unit(8),
                  42::128, 42::integer-size(116)-unit(8)>> <> <<0::128, 0::128>>
+  end
+
+  test "decodes an envelope of type InitConf" do
+    packet = <<0x83, 0, 0, 0>> <> <<42::32, 69::32, 0::928, 42::128>> <> <<0::128, 0::128>>
+
+    envelope = Envelope.decode(packet)
+
+    assert envelope == %Envelope{
+             type: :init_conf,
+             payload: %InitConf{
+               sidi: <<42::32>>,
+               sidr: <<69::32>>,
+               biscuit: <<0::928>>,
+               auth: <<42::128>>
+             },
+             mac: <<0::128>>
+           }
+  end
+
+  test "encodes an envelope of type InitConf" do
+    envelope = %Envelope{
+      type: :init_conf,
+      payload: %InitConf{
+        sidi: <<42::32>>,
+        sidr: <<69::32>>,
+        biscuit: <<0::928>>,
+        auth: <<42::128>>
+      },
+      mac: <<0::128>>
+    }
+
+    packet = Envelope.encode(envelope)
+
+    assert packet ==
+             <<0x83, 0, 0, 0>> <> <<42::32, 69::32, 0::928, 42::128>> <> <<0::128, 0::128>>
   end
 
   test "decodes an envelope of type EmptyData" do
