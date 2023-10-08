@@ -14,7 +14,7 @@ defmodule Bunny.Crypto do
   @type kem_pk :: EKEM.public_key() | SKEM.public_key()
   @type kem_sk :: EKEM.secret_key() | SKEM.secret_key()
   @type key :: <<_::256>>
-  @type session_id :: <<_::16>>
+  @type session_id :: <<_::32>>
 
   @doc """
   A keyed hash function with one 32-byte input, one variable-size input, and one 32-byte output.
