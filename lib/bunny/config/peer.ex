@@ -1,4 +1,5 @@
 defmodule Bunny.Config.Peer do
+  alias Bunny.Config
   alias Bunny.Crypto
   alias Bunny.Crypto.SKEM
   alias Bunny.Config.Peer
