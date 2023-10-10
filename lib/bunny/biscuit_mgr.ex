@@ -1,4 +1,5 @@
 defmodule Bunny.BiscuitMgr do
+  alias Bunny.Crypto.SKEM
   alias Bunny.Crypto
   use GenServer
 
@@ -25,11 +26,36 @@ defmodule Bunny.BiscuitMgr do
     {:ok, %{ctr: 0, keys: [Crypto.random_biscuit_key()], time: DateTime.utc_now()}}
   end
 
+  @impl true
+  def handle_call({:store_biscuit, ck, spki, spkr, sidi, sidr}, _from, state) do
+    state = refresh_keys(state)
+
+    {ck, ctr, nct} = Crypto.store_biscuit(ck, state.ctr, hd(state.keys), spki, spkr, sidi, sidr)
+
+    state = state |> Map.put(:ctr, ctr)
+    {:reply, {:ok, ck, nct}, state}
+  end
+
   @doc """
   Starts the biscuit manager server.
   """
   @spec start() :: {:error, any()} | {:ok, pid()}
   def start() do
     GenServer.start(__MODULE__, nil)
+  end
+
+  @doc """
+  Encrypts a biscuit, returning the updated chaining key with the ciphertext.
+  """
+  @spec store_biscuit(
+          pid(),
+          Crypto.chaining_key(),
+          SKEM.public_key(),
+          SKEM.public_key(),
+          Crypto.session_id(),
+          Crypto.session_id()
+        ) :: {:ok, Crypto.chaining_key(), Crypto.biscuit_ct()}
+  def store_biscuit(server, ck, spki, spkr, sidi, sidr) do
+    GenServer.call(server, {:store_biscuit, ck, spki, spkr, sidi, sidr})
   end
 end
