@@ -57,4 +57,9 @@ defmodule Bunny.CryptoTest do
     sid = Crypto.random_session_id()
     assert byte_size(sid) == 4
   end
+
+  test "generates a random biscuit key" do
+    key = Crypto.random_biscuit_key()
+    assert byte_size(key) == 32
+  end
 end

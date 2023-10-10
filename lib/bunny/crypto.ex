@@ -119,6 +119,14 @@ defmodule Bunny.Crypto do
   end
 
   @doc """
+  Generates a random biscuit key in a cryptographic strong fashion.
+  """
+  @spec random_biscuit_key() :: key()
+  def random_biscuit_key() do
+    :enacl.randombytes(32)
+  end
+
+  @doc """
   Generates a random session ID in a cryptographic strong fashion.
   """
   @spec random_session_id() :: session_id()
