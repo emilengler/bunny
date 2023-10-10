@@ -10,7 +10,7 @@ defmodule Bunny.Envelope.Biscuit do
   """
 
   @type pidi :: <<_::256>>
-  @type biscuit_no :: <<_::96>>
+  @type biscuit_no :: non_neg_integer()
   @type chaining_key :: <<_::256>>
 
   @type packet :: <<_::608>>
@@ -23,7 +23,7 @@ defmodule Bunny.Envelope.Biscuit do
 
   @spec decode(packet()) :: t()
   def decode(packet) do
-    <<pidi::binary-size(32), biscuit_no::binary-size(12), ck::binary-size(32)>> = packet
+    <<pidi::binary-size(32), biscuit_no::96-little, ck::binary-size(32)>> = packet
 
     %Biscuit{
       pidi: pidi,
@@ -34,6 +34,6 @@ defmodule Bunny.Envelope.Biscuit do
 
   @spec encode(t()) :: packet()
   def encode(payload) do
-    payload.pidi <> payload.biscuit_no <> payload.ck
+    payload.pidi <> <<payload.biscuit_no::96-little>> <> payload.ck
   end
 end
