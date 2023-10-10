@@ -1,4 +1,6 @@
 defmodule Bunny.Crypto do
+  alias Bunny.Crypto.XAEAD
+  alias Bunny.Envelope.Biscuit
   alias Bunny.Crypto.SKEM
   alias Bunny.Crypto.EKEM
   alias Bunny.Crypto.AEAD
@@ -7,6 +9,8 @@ defmodule Bunny.Crypto do
   Provides basic cryptographic helper functions, most of them being defined in the whitepaper.
   """
 
+  @type biscuit_ct :: <<_::800>>
+  @type biscuit_ctr :: Biscuit.biscuit_no()
   @type chaining_key :: key()
   @type hash :: <<_::256>>
   @type kem :: :ekem | :skem
@@ -116,6 +120,35 @@ defmodule Bunny.Crypto do
       end
 
     ck |> mix(pk) |> mix(shk) |> mix(ct)
+  end
+
+  @spec store_biscuit(
+          chaining_key(),
+          biscuit_ctr(),
+          key(),
+          SKEM.public_key(),
+          SKEM.public_key(),
+          session_id(),
+          session_id()
+        ) :: {chaining_key(), biscuit_ctr(), biscuit_ct()}
+  def store_biscuit(ck, ctr, k, spki, spkr, sidi, sidr) do
+    ctr = ctr + 1
+
+    n = :enacl.randombytes(24)
+
+    pt =
+      Biscuit.encode(%Biscuit{
+        pidi: lhash("peer id") |> hash(spki),
+        biscuit_no: ctr,
+        ck: ck
+      })
+
+    ad = lhash("biscuit additional data") |> hash(spkr) |> hash(sidi) |> hash(sidr)
+    ct = XAEAD.enc(k, n, pt, ad)
+    nct = n <> ct
+
+    ck = ck |> mix(nct)
+    {ck, ctr, nct}
   end
 
   @doc """
